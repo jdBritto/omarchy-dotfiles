@@ -11,7 +11,7 @@ desarrollo (Claude Code, Codex, gh, Node, OpenCode vía mise), dictado por voz
 2. Abre una terminal (`Super + Enter`) y ejecuta:
 
 ```bash
-git clone https://github.com/USUARIO/omarchy-dotfiles.git ~/omarchy-dotfiles
+git clone https://github.com/jdBritto/omarchy-dotfiles.git ~/omarchy-dotfiles
 ~/omarchy-dotfiles/install.sh
 ```
 
