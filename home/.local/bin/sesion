@@ -6,7 +6,9 @@
 #   sesion alternar   -> cambiar al otro
 #   sesion estado     -> mostrar cual esta elegido
 #
-# Despues de cambiar pregunta si quieres reiniciar la sesion ahora.
+# Despues de cambiar pregunta si quieres reiniciar el equipo ahora.
+# (Se reinicia el equipo entero: si solo se reinicia la sesion, la anterior
+# queda activa por detras y la nueva arranca con la pantalla en negro.)
 
 CONF=/etc/sddm.conf.d/autologin.conf
 
@@ -22,8 +24,8 @@ cambiar() {
     sudo sed -i "s|^Session=.*|Session=$archivo|" "$CONF" || exit 1
     echo "Al iniciar sesion se usara: $nombre"
   fi
-  read -rp "Reiniciar la sesion ahora? Se cerraran todas las ventanas. [s/N] " r
-  [[ $r =~ ^[sSyY]$ ]] && sudo systemctl restart sddm
+  read -rp "Reiniciar el equipo ahora? Se cerraran todas las ventanas. [s/N] " r
+  if [[ $r =~ ^[sSyY]$ ]]; then systemctl reboot; else echo "El cambio se aplica al reiniciar el equipo."; fi
 }
 
 case "${1:-estado}" in
@@ -31,5 +33,5 @@ case "${1:-estado}" in
   hyprland) cambiar hyprland omarchy.desktop ;;
   alternar) [[ $(actual) == niri ]] && exec "$0" hyprland || exec "$0" niri ;;
   estado)   echo "Sesion elegida: $(actual)" ;;
-  *)        sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+  *)        sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
 esac

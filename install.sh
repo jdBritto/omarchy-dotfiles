@@ -3,7 +3,9 @@
 # DankMaterialShell + selector `escritorio`, atajos, fuentes, herramientas
 # (mise), dictado por voz (voxtype) y galeria de fondos.
 #
-# Uso:  ./install.sh
+# Uso:  ./install.sh              (pregunta: Hyprland o Niri)
+#       ./install.sh --hyprland   (sin preguntar)
+#       ./install.sh --niri
 # Es seguro ejecutarlo mas de una vez. Antes de sobrescribir guarda una copia
 # de tus archivos en ~/.config-respaldo-<fecha>.
 
@@ -22,11 +24,34 @@ error() { printf '\033[1;31m[error] %s\033[0m\n' "$*" >&2; exit 1; }
 [[ -d $OMARCHY_PATH ]] || error "Omarchy no esta instalado. Instala primero Omarchy (https://omarchy.org) y luego vuelve a ejecutar este script."
 command -v pacman >/dev/null || error "Este script es solo para Arch Linux / Omarchy."
 
+# ---------------------------------------------------------------- escritorio
+SESION=""
+case "${1:-}" in
+  --hyprland) SESION=hyprland ;;
+  --niri)     SESION=niri ;;
+  "")         ;;
+  *)          error "Opcion desconocida: $1 (usa --hyprland o --niri)" ;;
+esac
+if [[ -z $SESION ]]; then
+  if [[ -t 0 ]]; then
+    echo
+    echo "Con que escritorio quieres arrancar el equipo?"
+    echo "  1) Hyprland  (Omarchy, con DankMaterialShell)   [por defecto]"
+    echo "  2) Niri      (con DankMaterialShell)"
+    echo "Se instalan los dos; despues puedes cambiar con: sesion alternar"
+    read -rp "Elige 1 o 2: " r
+    [[ $r == 2 ]] && SESION=niri || SESION=hyprland
+  else
+    SESION=hyprland
+  fi
+fi
+
 ES_VMWARE=false
 [[ $(systemd-detect-virt 2>/dev/null || true) == vmware ]] && ES_VMWARE=true
 
 echo "Repositorio: $REPO"
 echo "Maquina virtual VMware: $ES_VMWARE"
+echo "Escritorio al arrancar: $SESION"
 sudo -v || error "Hace falta tu contrasena de administrador."
 
 # ---------------------------------------------------------------- paquetes
@@ -117,6 +142,16 @@ else
   systemctl --user disable vmware-display-sync.service 2>/dev/null || true
 fi
 
+# ---------------------------------------------------------------- sesion de inicio
+verde "Eligiendo el escritorio de inicio: $SESION"
+AUTOLOGIN=/etc/sddm.conf.d/autologin.conf
+if [[ $SESION == niri ]]; then ARCHIVO=niri.desktop; else ARCHIVO=omarchy.desktop; fi
+if sudo test -f "$AUTOLOGIN"; then
+  sudo sed -i "s|^Session=.*|Session=$ARCHIVO|" "$AUTOLOGIN"
+else
+  aviso "No encontre $AUTOLOGIN; elige el escritorio luego con: sesion $SESION"
+fi
+
 # ---------------------------------------------------------------- tema
 if [[ -n ${WAYLAND_DISPLAY:-} ]] && command -v omarchy-theme-set >/dev/null; then
   verde "Aplicando tema Tokyo Night"
@@ -126,10 +161,11 @@ fi
 
 verde "Listo"
 cat <<EOF
-Cierra sesion y vuelve a entrar (o reinicia) para ver todo aplicado.
+Reinicia el equipo para ver todo aplicado.
 
-  - Al entrar se usa DankMaterialShell.
+  - Escritorio al arrancar: $SESION, con DankMaterialShell.
   - Cambiar entre DMS y Omarchy:  Super + Shift + Ctrl + D
     o en una terminal:            escritorio alternar
+    (en Hyprland)
   - Cambiar entre Hyprland y Niri (en una terminal):  sesion alternar
 EOF

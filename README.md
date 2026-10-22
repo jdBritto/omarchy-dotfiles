@@ -15,7 +15,11 @@ git clone https://github.com/jdBritto/omarchy-dotfiles.git ~/omarchy-dotfiles
 ~/omarchy-dotfiles/install.sh
 ```
 
-3. Cierra sesión y vuelve a entrar.
+   Al empezar te pregunta con qué escritorio arrancar: **Hyprland** (por
+   defecto) o **Niri**. Se instalan los dos. Para no preguntar:
+   `install.sh --hyprland` o `install.sh --niri`.
+
+3. Reinicia el equipo.
 
 El script detecta si estás en una máquina virtual VMware y solo en ese caso
 aplica los ajustes de VMware (renderizado por software, monitor `Virtual-1`,
@@ -32,6 +36,10 @@ sesion niri       # arrancar con Niri
 sesion hyprland   # volver a Hyprland (Omarchy)
 sesion estado     # ver cuál está elegido
 ```
+
+Después de cambiar, `sesion` ofrece reiniciar el equipo. Hace falta reiniciar
+el equipo entero: si solo se reinicia la sesión, Hyprland puede quedar con la
+pantalla en negro.
 
 En Niri, `Super + Tab` muestra la vista general y `Super + K` la lista de atajos.
 
