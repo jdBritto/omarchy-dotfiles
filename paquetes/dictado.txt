@@ -1,0 +1,3 @@
+# Dictado por voz (voxtype-bin viene del AUR en Arch sin Omarchy)
+voxtype-bin
+wtype

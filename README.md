@@ -1,6 +1,6 @@
 # omarchy-dotfiles
 
-Mi entorno de trabajo sobre [Omarchy](https://omarchy.org): DankMaterialShell con
+Mi entorno de trabajo sobre [Omarchy](https://omarchy.org) o Arch Linux limpio: DankMaterialShell con
 el selector `escritorio`, atajos de teclado en español, fuentes, herramientas de
 desarrollo (Claude Code, Codex, gh, Node, OpenCode vía mise), dictado por voz
 (voxtype) y galería de fondos.
@@ -15,11 +15,29 @@ git clone https://github.com/jdBritto/omarchy-dotfiles.git ~/omarchy-dotfiles
 ~/omarchy-dotfiles/install.sh
 ```
 
-   Al empezar te pregunta con qué escritorio arrancar: **Hyprland** (por
-   defecto) o **Niri**. Se instalan los dos. Para no preguntar:
-   `install.sh --hyprland` o `install.sh --niri`.
+   Al empezar muestra una lista para elegir qué instalar (escribes los
+   números para marcar o desmarcar) y, si elegiste Hyprland y Niri, con cuál
+   arrancar. Para instalar lo recomendado sin preguntas: `install.sh --si`.
 
 3. Reinicia el equipo.
+
+### En Arch Linux limpio (sin Omarchy)
+
+Instala Arch (por ejemplo con `archinstall`, perfil *Minimal*, con un usuario
+que pueda usar `sudo` y con red), entra en la consola y ejecuta:
+
+```bash
+sudo pacman -S --needed git
+git clone https://github.com/jdBritto/omarchy-dotfiles.git ~/omarchy-dotfiles
+~/omarchy-dotfiles/install.sh
+```
+
+La lista agrega la opción **Base del sistema** (audio, red, Bluetooth,
+fuentes, terminal Ghostty, archivos y la pantalla de inicio SDDM), que Omarchy
+ya trae. El escritorio es **Niri con DankMaterialShell**: la configuración de
+Hyprland de este repo necesita Omarchy, así que no aparece. Los paquetes del
+AUR (como el dictado por voz) se instalan con `yay`, que se instala solo si
+hace falta. Al reiniciar, elige *Niri* en la pantalla de inicio.
 
 El script detecta si estás en una máquina virtual VMware y solo en ese caso
 aplica los ajustes de VMware (renderizado por software, monitor `Virtual-1`,
@@ -60,8 +78,7 @@ que tiene en tu carpeta personal.)
 |---------------------|--------|
 | `install.sh`        | Instalador |
 | `actualizar.sh`     | Sube tu configuración actual al repositorio |
-| `packages.txt`      | Paquetes extra que se instalan |
-| `packages-vmware.txt` | Paquetes solo para VMware |
+| `paquetes/`         | Paquetes de cada opción del instalador (`dms.txt` siempre) |
 | `home/`             | Archivos que se copian a tu carpeta personal |
 | `vmware/`           | Archivos que solo se copian en VMware |
 

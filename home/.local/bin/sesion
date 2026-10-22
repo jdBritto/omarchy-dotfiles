@@ -28,6 +28,12 @@ cambiar() {
   if [[ $r =~ ^[sSyY]$ ]]; then systemctl reboot; else echo "El cambio se aplica al reiniciar el equipo."; fi
 }
 
+if [[ ! -f $CONF ]]; then
+  echo "Este equipo no entra solo: elige el escritorio en la pantalla de inicio"
+  echo "(el menu de sesion, abajo). Queda recordado para la proxima vez."
+  exit 0
+fi
+
 case "${1:-estado}" in
   niri)     cambiar niri niri.desktop ;;
   hyprland) cambiar hyprland omarchy.desktop ;;

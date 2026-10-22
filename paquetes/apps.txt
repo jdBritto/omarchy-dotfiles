@@ -1,0 +1,4 @@
+# Apps extra
+firefox
+nano
+cava

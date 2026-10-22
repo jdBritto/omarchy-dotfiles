@@ -1,0 +1,7 @@
+# DankMaterialShell (siempre se instala)
+dms-shell
+matugen
+cliphist
+wl-clipboard
+accountsservice
+qt6ct

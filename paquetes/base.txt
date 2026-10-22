@@ -1,0 +1,26 @@
+# Base para Arch Linux limpio (Omarchy ya trae todo esto)
+# Audio
+pipewire
+pipewire-pulse
+wireplumber
+# Red y Bluetooth
+networkmanager
+bluez
+bluez-utils
+# Escritorio
+polkit
+xdg-user-dirs
+xdg-terminal-exec
+brightnessctl
+# Pantalla de inicio de sesion
+sddm
+# Terminal y archivos
+ghostty
+nautilus
+# Fuentes
+ttf-jetbrains-mono-nerd
+noto-fonts
+noto-fonts-emoji
+# Para compilar paquetes del AUR
+git
+base-devel

@@ -1,0 +1,3 @@
+# Herramientas de desarrollo (las instala mise segun ~/.config/mise/config.toml)
+mise
+git
