@@ -10,7 +10,7 @@ environment {
 input {
     keyboard {
         xkb {
-            layout "us"
+            layout "latam"
         }
     }
 }
