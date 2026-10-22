@@ -1,0 +1,63 @@
+// Modo futurista: animaciones, borde neon y cristal desenfocado.
+// Se activa y desactiva con:  futurista on | futurista off
+// (desactivado, este archivo se llama futurista.kdl.off)
+
+// Borde neon, brillo y animaciones con los colores del fondo actual.
+// Este archivo lo regenera DMS con cada fondo (plantilla en
+// ~/.config/matugen/templates/futurista-colores.kdl).
+include optional=true "futurista-colores.kdl"
+
+layout {
+    gaps 10
+}
+
+// ---------------------------------------------------------------- cristal
+blur {
+    passes 2
+    offset 3
+    noise 0.03
+    saturation 1.6
+}
+
+// Terminales semitransparentes con el fondo desenfocado.
+window-rule {
+    match app-id="com.mitchellh.ghostty"
+    match app-id="kitty"
+    match app-id="Alacritty"
+    match app-id="foot"
+    opacity 0.9
+    background-effect {
+        blur true
+        xray false
+    }
+}
+
+// Menus emergentes de todas las apps con cristal.
+window-rule {
+    popups {
+        background-effect {
+            blur true
+        }
+    }
+}
+
+// ---------------------------------------------------------------- animaciones
+animations {
+    // Movimientos con un rebote ligero.
+    workspace-switch {
+        spring damping-ratio=0.72 stiffness=520 epsilon=0.0001
+    }
+    horizontal-view-movement {
+        spring damping-ratio=0.78 stiffness=420 epsilon=0.0001
+    }
+    window-movement {
+        spring damping-ratio=0.70 stiffness=380 epsilon=0.0001
+    }
+    window-resize {
+        spring damping-ratio=0.78 stiffness=420 epsilon=0.0001
+    }
+    overview-open-close {
+        spring damping-ratio=0.75 stiffness=700 epsilon=0.0001
+    }
+
+}

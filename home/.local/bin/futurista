@@ -1,0 +1,106 @@
+#!/bin/bash
+# Activa o desactiva el modo futurista del escritorio (Niri + DMS).
+#
+#   futurista on       -> animaciones holograma/CRT, borde neon, cristal,
+#                         colores vivos sacados del fondo y fondos que
+#                         cambian cada 10 min (todo cambia de color con el fondo)
+#   futurista off      -> vuelve al estilo normal
+#   futurista estado   -> muestra si esta activo
+#
+# La parte de Niri esta en ~/.config/niri/futurista.kdl; sus colores salen de
+# la plantilla ~/.config/matugen/templates/futurista-colores.kdl, que DMS
+# vuelve a generar cada vez que cambia el fondo.
+
+NIRI=$HOME/.config/niri/futurista.kdl
+SESION=$HOME/.local/state/DankMaterialShell/session.json
+
+AJUSTES=$HOME/.config/DankMaterialShell/settings.json
+
+dms_activo() { dms ipc call settings get blurEnabled &>/dev/null; }
+
+dms_ajustes() { # dms_ajustes clave=valor...
+  local kv
+  if dms_activo; then
+    for kv in "$@"; do dms ipc call settings set "${kv%%=*}" "${kv#*=}" >/dev/null; done
+  else
+    # DMS no esta en marcha (por ejemplo, durante la instalacion): se escriben
+    # directamente en su archivo y los lee al arrancar.
+    mkdir -p "$(dirname "$AJUSTES")"
+    python3 -I - "$AJUSTES" "$@" <<'PY'
+import json, os, sys
+ruta = sys.argv[1]
+d = json.load(open(ruta)) if os.path.exists(ruta) else {}
+for kv in sys.argv[2:]:
+    k, v = kv.split("=", 1)
+    if v in ("true", "false"):
+        v = v == "true"
+    else:
+        try:
+            v = float(v)
+        except ValueError:
+            pass
+    d[k] = v
+json.dump(d, open(ruta, "w"), indent=2)
+PY
+  fi
+}
+
+# Terminal Foot con los colores que DMS saca del fondo (va despues del tema
+# de Omarchy para ganarle).
+FOOT=$HOME/.config/foot/foot.ini
+LINEA_FOOT='include=~/.config/foot/dank-colors.ini'
+foot_colores() { # foot_colores on|off
+  [[ -f $FOOT ]] || return 0
+  sed -i "\|^$LINEA_FOOT\$|d" "$FOOT"
+  if [[ $1 == on ]]; then
+    if grep -q '^include=' "$FOOT"; then
+      sed -i "0,/^include=.*/{//a $LINEA_FOOT
+}" "$FOOT"
+    else
+      sed -i "1a $LINEA_FOOT" "$FOOT"
+    fi
+  fi
+}
+
+dms_sesion() { # dms_sesion TRANSICION CAMBIO_AUTOMATICO(True/False)
+  mkdir -p "$(dirname "$SESION")"
+  [[ -f $SESION ]] || echo '{}' >"$SESION"
+  python3 -I - "$SESION" "$1" "$2" <<'EOF'
+import json, sys
+ruta, transicion, ciclo = sys.argv[1], sys.argv[2], sys.argv[3] == "True"
+d = json.load(open(ruta))
+d.update(wallpaperTransition=transicion, wallpaperCyclingEnabled=ciclo,
+         wallpaperCyclingMode="interval", wallpaperCyclingInterval=600,
+         wallpaperCyclingRandom=True)
+json.dump(d, open(ruta, "w"), indent=2)
+EOF
+  # DMS solo lee este archivo al arrancar.
+  if dms_activo; then dms restart >/dev/null 2>&1 & fi
+}
+
+case "${1:-estado}" in
+  on)
+    [[ -f $NIRI.off ]] && mv "$NIRI.off" "$NIRI"
+    dms_ajustes currentThemeName=dynamic matugenScheme=scheme-vibrant blurEnabled=true \
+      blurWallpaperOnOverview=true popupTransparency=0.8 dockTransparency=0.75 \
+      floatingWindowTransparency=0.85 foregroundLayerTransparency=0.85 \
+      blurBorderColor=primary blurBorderOpacity=0.5
+    foot_colores on
+    dms_sesion random True
+    echo "Modo futurista activado."
+    ;;
+  off)
+    [[ -f $NIRI ]] && mv "$NIRI" "$NIRI.off"
+    dms_ajustes currentThemeName=dynamic matugenScheme=scheme-tonal-spot blurEnabled=false blurWallpaperOnOverview=false \
+      popupTransparency=1 dockTransparency=1 floatingWindowTransparency=1 \
+      foregroundLayerTransparency=1 blurBorderColor=outline blurBorderOpacity=0.35
+    foot_colores off
+    dms_sesion fade False
+    echo "Modo futurista desactivado."
+    ;;
+  estado)
+    if [[ -f $NIRI ]]; then echo "Modo futurista: activo"; else echo "Modo futurista: desactivado"; fi
+    ;;
+  *)
+    sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+esac

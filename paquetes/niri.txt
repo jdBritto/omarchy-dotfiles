@@ -3,3 +3,5 @@ niri
 xwayland-satellite
 xdg-desktop-portal-gnome
 xdg-desktop-portal-gtk
+# Para el comando futurista
+python

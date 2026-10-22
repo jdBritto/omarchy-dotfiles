@@ -1,0 +1,107 @@
+// ! Lo genera DMS (matugen) cada vez que cambia el fondo. No editar aqui:
+// ! edita ~/.config/matugen/templates/futurista-colores.kdl
+
+// ---------------------------------------------------------------- borde neon
+layout {
+    gaps 10
+
+    // Borde de la ventana activa con degradado de los colores del fondo. Con
+    // relative-to="workspace-view" el degradado cubre toda la pantalla, asi
+    // que cambia de tono al desplazarte entre ventanas.
+    focus-ring {
+        on
+        width 2
+        active-gradient from="{{colors.primary.default.hex}}" to="{{colors.tertiary.default.hex}}" angle=135 relative-to="workspace-view" in="oklch shorter hue"
+        inactive-color "{{colors.outline_variant.default.hex}}"
+        urgent-color "{{colors.error.default.hex}}"
+    }
+
+    // Brillo de color alrededor de la ventana activa (en vez de sombra negra).
+    shadow {
+        on
+        softness 40
+        spread 4
+        offset x=0 y=0
+        draw-behind-window true
+        color "{{colors.primary.default.hex}}50"
+        inactive-color "#00000080"
+    }
+
+    insert-hint {
+        gradient from="{{colors.primary.default.hex}}80" to="{{colors.tertiary.default.hex}}80" angle=45
+    }
+}
+
+// ---------------------------------------------------------------- animaciones con color
+animations {
+    // Abrir: la ventana se materializa como un holograma. Una linea de luz (color del fondo)
+    // la dibuja de arriba abajo, con lineas de escaneo y los colores
+    // separados (rojo/azul) que se van alineando.
+    window-open {
+        duration-ms 420
+        curve "ease-out-cubic"
+        custom-shader r"
+            vec4 open_color(vec3 coords_geo, vec3 size_geo) {
+                float p = niri_clamped_progress;
+
+                float scale = 0.94 + 0.06 * p;
+                vec2 uv = (coords_geo.xy - 0.5) / scale + 0.5;
+                if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
+                    return vec4(0.0);
+
+                // Parte ya dibujada: de arriba hasta la linea de neon.
+                float d = p * 1.15 - uv.y;
+                if (d < 0.0)
+                    return vec4(0.0);
+
+                // Colores separados que se alinean al terminar.
+                float ab = (1.0 - p) * 0.012;
+                vec4 cg = texture2D(niri_tex, (niri_geo_to_tex * vec3(uv, 1.0)).st);
+                float r = texture2D(niri_tex, (niri_geo_to_tex * vec3(uv + vec2(ab, 0.0), 1.0)).st).r;
+                float b = texture2D(niri_tex, (niri_geo_to_tex * vec3(uv - vec2(ab, 0.0), 1.0)).st).b;
+                vec4 color = vec4(r, cg.g, b, cg.a);
+
+                // Lineas de escaneo que desaparecen.
+                float scan = 0.82 + 0.18 * sin(uv.y * size_geo.y * 1.6);
+                color.rgb *= mix(scan, 1.0, p);
+
+                // Linea de neon en el borde que se va dibujando.
+                float glow = exp(-d * 45.0) * (1.0 - p * p);
+                vec3 neon = vec3(float({{colors.primary.default.red}}), float({{colors.primary.default.green}}), float({{colors.primary.default.blue}})) / 255.0;
+                color += vec4(neon, 1.0) * glow * 0.9;
+
+                return color * min(1.0, 0.25 + p * 1.5);
+            }
+        "
+    }
+
+    // Cerrar: se apaga como una pantalla vieja (CRT). Se aplasta en una
+    // linea brillante y la linea se encoge hasta desaparecer.
+    window-close {
+        duration-ms 340
+        curve "linear"
+        custom-shader r"
+            vec4 close_color(vec3 coords_geo, vec3 size_geo) {
+                float p = niri_clamped_progress;
+
+                float sy = max(1.0 - p / 0.55, 3.0 / size_geo.y);
+                float sx = 1.0 - smoothstep(0.55, 1.0, p);
+                if (sx <= 0.001)
+                    return vec4(0.0);
+
+                vec2 uv = (coords_geo.xy - 0.5) / vec2(sx, sy) + 0.5;
+                if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
+                    return vec4(0.0);
+
+                vec4 color = texture2D(niri_tex, (niri_geo_to_tex * vec3(uv, 1.0)).st);
+
+                // Se vuelve una linea brillante del color del fondo mientras se aplasta.
+                float flash = smoothstep(0.25, 0.6, p);
+                vec3 neon = mix(vec3(float({{colors.primary.default.red}}), float({{colors.primary.default.green}}), float({{colors.primary.default.blue}})) / 255.0, vec3(1.0), 0.45);
+                color.rgb = mix(color.rgb, neon * color.a, flash);
+
+                return color * (1.0 - smoothstep(0.9, 1.0, p));
+            }
+        "
+    }
+}

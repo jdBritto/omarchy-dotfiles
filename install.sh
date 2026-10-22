@@ -60,6 +60,7 @@ agregar() { IDS+=("$1"); DESC[$1]=$2; MARCA[$1]=$3; }
 $ES_OMARCHY || agregar base "Base del sistema: audio, red, Bluetooth, fuentes, terminal, archivos y pantalla de inicio" si
 $ES_OMARCHY && agregar hyprland "Hyprland con DMS y el selector 'escritorio' (DMS u Omarchy)" si
 agregar niri "Niri con DMS (ventanas en columnas que se desplazan de lado)" si
+agregar futurista "Modo futurista en Niri: animaciones holograma, borde neon y cristal; los colores siguen al fondo" si
 agregar terminales "Ajustes de terminales (Ghostty, Kitty, Alacritty, Foot)" si
 agregar apps "Apps: Firefox, nano, cava" si
 agregar herramientas "Herramientas de desarrollo: claude, codex, gh, node, opencode" si
@@ -195,7 +196,7 @@ H="$REPO/home" V="$REPO/vmware"
 copiar "$H" .config/DankMaterialShell .local/bin/sesion
 quiere hyprland && copiar "$H" .config/hypr .config/escritorio-modo .config/omarchy \
   .local/bin/escritorio .local/bin/escritorio-accion
-quiere niri && copiar "$H" .config/niri
+quiere niri && copiar "$H" .config/niri .config/matugen .local/bin/futurista
 quiere terminales && copiar "$H" .config/alacritty .config/foot .config/ghostty .config/kitty
 $ES_OMARCHY && copiar "$H" .config/mimeapps.list
 quiere herramientas && copiar "$H" .config/mise .claude
@@ -216,7 +217,7 @@ fi
 if quiere niri; then
   NIRI="$HOME/.config/niri/personal.kdl"
   # Niri no entiende $HOME en su configuracion: poner la ruta real.
-  sed -i "s|/home/jdbritto|$HOME|g" "$NIRI"
+  sed -i "s|/home/jdbritto|$HOME|g" "$NIRI" "$HOME/.config/matugen/config.toml"
   if ! $ES_OMARCHY; then
     # Sin Omarchy no existen sus comandos.
     if quiere apps; then NAVEGADOR='"firefox"'; else NAVEGADOR='"xdg-open" "https://duckduckgo.com"'; fi
@@ -240,7 +241,7 @@ if ! $ES_OMARCHY; then
   fi
 fi
 
-chmod +x "$HOME"/.local/bin/sesion "$HOME"/.local/bin/escritorio* "$HOME"/.local/bin/vmware-display-sync 2>/dev/null || true
+chmod +x "$HOME"/.local/bin/sesion "$HOME"/.local/bin/futurista "$HOME"/.local/bin/escritorio* "$HOME"/.local/bin/vmware-display-sync 2>/dev/null || true
 if [[ -d $RESPALDO ]]; then echo "Copia de tus archivos anteriores: $RESPALDO"; fi
 
 # ---------------------------------------------------------------- fondos
@@ -307,6 +308,18 @@ else
   echo "Este equipo no entra solo: elige \"$SESION\" en la pantalla de inicio (queda recordado)."
 fi
 
+# ---------------------------------------------------------------- modo futurista
+if quiere niri; then
+  if quiere futurista; then
+    verde "Activando el modo futurista"
+    "$HOME/.local/bin/futurista" on
+  else
+    "$HOME/.local/bin/futurista" off >/dev/null
+  fi
+elif quiere futurista; then
+  aviso "El modo futurista es para Niri; como no elegiste Niri, se omite."
+fi
+
 # ---------------------------------------------------------------- tema
 if quiere fondos && [[ -n ${WAYLAND_DISPLAY:-} ]] && command -v omarchy-theme-set >/dev/null; then
   verde "Aplicando tema Tokyo Night"
@@ -327,6 +340,7 @@ if quiere hyprland && quiere niri; then
 fi
 if quiere niri; then
   echo "  - En Niri: Super + K muestra todos los atajos."
+  echo "  - Modo futurista (animaciones y efectos):  futurista on  /  futurista off"
 fi
 echo
 echo "Para agregar algo que no elegiste, vuelve a ejecutar ./install.sh"

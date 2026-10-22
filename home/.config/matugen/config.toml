@@ -1,0 +1,5 @@
+[config]
+
+[templates.futurista]
+input_path = '/home/jdbritto/.config/matugen/templates/futurista-colores.kdl'
+output_path = '/home/jdbritto/.config/niri/futurista-colores.kdl'

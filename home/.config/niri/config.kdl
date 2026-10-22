@@ -257,5 +257,7 @@ include optional=true "dms/input.kdl"
 
 // Mis ajustes (atajos iguales a Hyprland/Omarchy). Van al final para ganar.
 include optional=true "personal.kdl"
+// Modo futurista (animaciones y efectos). Se cambia con: futurista on|off
+include optional=true "futurista.kdl"
 // Solo existe en maquinas virtuales VMware (lo crea install.sh).
 include optional=true "vmware.kdl"

@@ -61,6 +61,31 @@ pantalla en negro.
 
 En Niri, `Super + Tab` muestra la vista general y `Super + K` la lista de atajos.
 
+## Modo futurista
+
+Opcional en el instalador (viene marcado) y solo para Niri. Añade:
+
+- **Animaciones:** las ventanas se abren como un holograma (una línea de luz las
+  dibuja con líneas de escaneo) y se cierran como una pantalla vieja (CRT).
+  Movimientos con un rebote ligero.
+- **Borde neón** con degradado y brillo alrededor de la ventana activa.
+- **Cristal:** terminales, barra y menús semitransparentes con el fondo desenfocado.
+- **Colores que siguen al fondo:** DMS saca una paleta viva de cada fondo y con
+  ella pinta la barra, los paneles, la terminal, el borde neón y las animaciones.
+- **Fondos** que cambian solos cada 10 minutos con transiciones aleatorias
+  (disolver, barrido, círculo, pixelado, portal…).
+
+```bash
+futurista on       # activarlo
+futurista off      # volver al estilo normal
+futurista estado   # ver si está activo
+```
+
+La parte de Niri está en `~/.config/niri/futurista.kdl`. Los colores del borde y
+de las animaciones salen de la plantilla
+`~/.config/matugen/templates/futurista-colores.kdl`, que DMS vuelve a generar en
+cada cambio de fondo.
+
 ## Guardar cambios de configuración
 
 Si cambias algo de tu configuración y quieres guardarlo en GitHub:
