@@ -10,3 +10,5 @@ firefox
 nano
 voxtype-bin
 wtype
+niri
+xwayland-satellite

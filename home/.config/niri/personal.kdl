@@ -1,0 +1,49 @@
+// Atajos personales para Niri, iguales a los de Hyprland/Omarchy.
+// Los atajos de DMS (dms/binds.kdl) siguen funcionando; estos los reemplazan
+// cuando usan la misma tecla.
+
+environment {
+    OMARCHY_PATH "/usr/share/omarchy"
+    PATH "/usr/share/omarchy/bin:/home/jdbritto/.local/bin:/home/jdbritto/.local/share/mise/shims:/usr/local/bin:/usr/bin"
+}
+
+input {
+    keyboard {
+        xkb {
+            layout "us"
+        }
+    }
+}
+
+binds {
+    // Aplicaciones
+    Mod+Return hotkey-overlay-title="Terminal" { spawn "xdg-terminal-exec"; }
+    Mod+Shift+Return hotkey-overlay-title="Navegador" { spawn "omarchy-launch-browser"; }
+    Mod+Shift+B hotkey-overlay-title="Navegador" { spawn "omarchy-launch-browser"; }
+    Mod+Shift+F hotkey-overlay-title="Archivos" { spawn "nautilus" "--new-window"; }
+
+    // Ventanas (como en Omarchy)
+    Mod+W repeat=false hotkey-overlay-title="Cerrar ventana" { close-window; }
+    Mod+F hotkey-overlay-title="Pantalla completa" { fullscreen-window; }
+    Mod+Alt+F hotkey-overlay-title="Ancho completo" { maximize-column; }
+    Mod+T hotkey-overlay-title="Flotante / mosaico" { toggle-window-floating; }
+
+    // Escritorio (DMS), igual que en Hyprland
+    Mod+Space hotkey-overlay-title="Buscar aplicaciones" { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
+    Mod+Alt+Space hotkey-overlay-title="Menu" { spawn "dms" "ipc" "call" "launcher" "toggle"; }
+    Mod+Escape hotkey-overlay-title="Apagar / reiniciar" { spawn "dms" "ipc" "call" "powermenu" "toggle"; }
+    Mod+Shift+Ctrl+Space hotkey-overlay-title="Cambiar tema" { spawn "dms" "ipc" "call" "settings" "focusOrToggleWith" "theme"; }
+    Mod+Ctrl+Space hotkey-overlay-title="Cambiar fondo" { spawn "dms" "ipc" "call" "dankdash" "wallpaper"; }
+    Mod+I hotkey-overlay-title="Configuracion" { spawn "dms" "ipc" "call" "settings" "focusOrToggle"; }
+    Mod+Ctrl+V hotkey-overlay-title="Portapapeles" { spawn "dms" "ipc" "call" "clipboard" "toggle"; }
+    Mod+A hotkey-overlay-title="Centro de control" { spawn "dms" "ipc" "call" "control-center" "toggle"; }
+    Mod+N hotkey-overlay-title="Notificaciones" { spawn "dms" "ipc" "call" "notifications" "toggle"; }
+    Mod+Shift+Comma hotkey-overlay-title="Borrar notificaciones" { spawn "dms" "ipc" "call" "notifications" "clearAll"; }
+    Mod+K hotkey-overlay-title="Ver atajos" { show-hotkey-overlay; }
+    Mod+Ctrl+L hotkey-overlay-title="Bloquear pantalla" { spawn "dms" "ipc" "call" "lock" "lock"; }
+    Ctrl+Shift+Escape hotkey-overlay-title="Administrador de tareas" { spawn "dms" "ipc" "call" "processlist" "focusOrToggle"; }
+    Mod+Ctrl+Alt+D hotkey-overlay-title="Calendario" { spawn "dms" "ipc" "call" "dash" "toggle"; }
+    XF86PowerOff allow-when-locked=true { spawn "dms" "ipc" "call" "powermenu" "toggle"; }
+
+    // Espacios de trabajo: Mod+Tab = vista general (como en DMS)
+}

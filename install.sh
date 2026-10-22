@@ -67,13 +67,15 @@ if $ES_VMWARE; then
   copiar_arbol "$REPO/vmware"
 else
   # En un equipo nativo no se usan los ajustes de VMware.
-  rm -f "$HOME/.config/hypr/vmware.lua" "$HOME/.config/hypr/envs.conf"
+  rm -f "$HOME/.config/hypr/vmware.lua" "$HOME/.config/hypr/envs.conf" "$HOME/.config/niri/vmware.kdl"
   if grep -q 'Virtual-1' "$HOME/.config/hypr/monitors.lua" 2>/dev/null; then
     mkdir -p "$RESPALDO" && cp -a "$HOME/.config/hypr/monitors.lua" "$RESPALDO/monitors.lua.vmware"
     cp "$OMARCHY_PATH/config/hypr/monitors.lua" "$HOME/.config/hypr/monitors.lua"
   fi
 fi
-chmod +x "$HOME"/.local/bin/escritorio* "$HOME"/.local/bin/vmware-display-sync 2>/dev/null || true
+# Niri no entiende $HOME en su configuracion: poner la ruta real.
+sed -i "s|/home/jdbritto|$HOME|g" "$HOME/.config/niri/personal.kdl"
+chmod +x "$HOME"/.local/bin/sesion "$HOME"/.local/bin/escritorio* "$HOME"/.local/bin/vmware-display-sync 2>/dev/null || true
 if [[ -d $RESPALDO ]]; then echo "Copia de tus archivos anteriores: $RESPALDO"; fi
 
 # ---------------------------------------------------------------- fondos
@@ -129,4 +131,5 @@ Cierra sesion y vuelve a entrar (o reinicia) para ver todo aplicado.
   - Al entrar se usa DankMaterialShell.
   - Cambiar entre DMS y Omarchy:  Super + Shift + Ctrl + D
     o en una terminal:            escritorio alternar
+  - Cambiar entre Hyprland y Niri (en una terminal):  sesion alternar
 EOF

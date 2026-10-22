@@ -1,0 +1,15 @@
+// Solo para VMware Workstation (lo instala install.sh si detecta VMware).
+// Igual que en Hyprland: renderizado por software para las apps y
+// resolucion fija de 1920x1080.
+environment {
+    LIBGL_ALWAYS_SOFTWARE "1"
+}
+
+output "Virtual-1" {
+    mode "1920x1080@60"
+    scale 1
+}
+
+debug {
+    disable-cursor-plane
+}

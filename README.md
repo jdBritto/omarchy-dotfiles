@@ -22,6 +22,19 @@ aplica los ajustes de VMware (renderizado por software, monitor `Virtual-1`,
 open-vm-tools). En un equipo nativo usa la configuración normal de Omarchy.
 Antes de sobrescribir nada guarda una copia en `~/.config-respaldo-<fecha>`.
 
+## Niri (opcional)
+
+También queda instalado Niri, otro gestor de ventanas (con columnas que se
+desplazan de lado), usando DankMaterialShell y los mismos atajos.
+
+```bash
+sesion niri       # arrancar con Niri
+sesion hyprland   # volver a Hyprland (Omarchy)
+sesion estado     # ver cuál está elegido
+```
+
+En Niri, `Super + Tab` muestra la vista general y `Super + K` la lista de atajos.
+
 ## Guardar cambios de configuración
 
 Si cambias algo de tu configuración y quieres guardarlo en GitHub:
