@@ -110,7 +110,7 @@ systemctl --user daemon-reload
 systemctl --user enable voxtype.service 2>/dev/null || aviso "No se pudo activar voxtype.service"
 if $ES_VMWARE; then
   sudo systemctl enable --now vmtoolsd.service 2>/dev/null || true
-  systemctl --user enable vmware-display-sync.service || true
+  # La resolucion se fija en monitors.lua; vmware-display-sync queda opcional.
 else
   systemctl --user disable vmware-display-sync.service 2>/dev/null || true
 fi

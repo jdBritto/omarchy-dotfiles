@@ -8,11 +8,12 @@ local omarchy_monitor_scale = 1
 --hl.monitor({ output = "", mode = "preferred", position = "auto", scale = omarchy_monitor_scale })
 
 -- Configure a specific monitor.
--- VMware Workstation guest: the virtual connector is "Virtual-1", not "DP-2".
--- vmwgfx exposes the host window size as the connector's preferred mode, so
--- "preferred" keeps the desktop proportional to the VMware window (and to
--- full-screen mode) instead of pinning a fixed resolution.
-hl.monitor({ output = "Virtual-1", mode = "preferred", position = "auto", scale = omarchy_monitor_scale })
+-- VMware Workstation guest: the virtual connector is "Virtual-1".
+-- VMware no envia el tamano real de la pantalla (llegaba 1280x800, con mucho
+-- zoom), asi que se fija 1920x1080, la pantalla del PC en pantalla completa.
+-- Para que siga el tamano de la ventana de VMware, usa mode = "preferred" y
+-- activa: systemctl --user enable --now vmware-display-sync
+hl.monitor({ output = "Virtual-1", mode = "1920x1080@60", position = "auto", scale = omarchy_monitor_scale })
 
 -- Portrait/rotated secondary monitor (transform: 1 = 90°, 3 = 270°).
 -- hl.monitor({ output = "Virtual-1", mode = "preferred", position = "auto", scale = 1, transform = 1 })
