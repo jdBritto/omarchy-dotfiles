@@ -86,6 +86,43 @@ de las animaciones salen de la plantilla
 `~/.config/matugen/templates/futurista-colores.kdl`, que DMS vuelve a generar en
 cada cambio de fondo.
 
+## Gaming
+
+Opción **Gaming** del instalador (desmarcada en máquinas virtuales, donde no hay
+tarjeta gráfica real):
+
+- **Steam** con Proton (juegos de Windows), **GameMode** (más prioridad al
+  juego), **MangoHud** (FPS y temperaturas en pantalla), **Gamescope** y
+  **ProtonPlus** (versiones extra de Proton, como GE-Proton).
+- **Drivers Vulkan de 32 y 64 bits** elegidos según tu tarjeta (AMD, Intel o
+  NVIDIA). Así Steam no instala por error los drivers de NVIDIA.
+- En Arch sin Omarchy con NVIDIA también instala el driver y lo configura para
+  el arranque. Omarchy ya lo hace al instalarse.
+
+En Steam: *Ajustes > Compatibilidad* y activa Proton para todos los juegos. Para
+un juego, en sus *Opciones de lanzamiento*: `gamemoderun mangohud %command%`.
+
+Antes de dejar Windows, revisa tus juegos en [ProtonDB](https://www.protondb.com)
+y [Are We Anti-Cheat Yet](https://areweanticheatyet.com): los que usan ciertos
+anticheat (Valorant, League of Legends, Fortnite…) no funcionan en Linux.
+
+## Seguridad
+
+Opción **Seguridad** del instalador (desmarcada por defecto; descarga 1,2 GB y ocupa unos 4 GB):
+
+- En el sistema: `nmap` y Wireshark (usable sin `sudo`).
+- Un **contenedor Kali** con sus 10 herramientas principales (Metasploit, Burp
+  Suite, nmap, Wireshark, sqlmap, John, Hydra, Aircrack-ng, NetExec, Responder). Las herramientas quedan separadas
+  del sistema donde juegas, pero comparten tu carpeta personal y tu red.
+
+```bash
+kali                         # abrir una terminal dentro de Kali
+kali sqlmap -h               # ejecutar una herramienta de Kali
+kali sudo apt install gobuster   # instalar más herramientas dentro
+```
+
+Para laboratorios o malware usa mejor una máquina virtual aparte.
+
 ## Guardar cambios de configuración
 
 Si cambias algo de tu configuración y quieres guardarlo en GitHub:

@@ -1,0 +1,15 @@
+#!/bin/bash
+# Entra al contenedor Kali con las herramientas de seguridad.
+#
+#   kali             -> abre una terminal dentro de Kali
+#   kali <comando>   -> ejecuta ese comando dentro de Kali (ej: kali sqlmap -h)
+#
+# Dentro se instalan mas herramientas con: sudo apt install <paquete>
+# Tu carpeta personal es la misma dentro y fuera del contenedor.
+
+if ! distrobox list 2>/dev/null | grep -qw kali; then
+  echo "El contenedor Kali no existe. Crealo con ~/omarchy-dotfiles/install.sh"
+  echo "(marca la opcion Seguridad)."
+  exit 1
+fi
+if (($#)); then exec distrobox enter kali -- "$@"; else exec distrobox enter kali; fi

@@ -65,6 +65,10 @@ agregar terminales "Ajustes de terminales (Ghostty, Kitty, Alacritty, Foot)" si
 agregar apps "Apps: Firefox, nano, cava" si
 agregar herramientas "Herramientas de desarrollo: claude, codex, gh, node, opencode" si
 agregar dictado "Dictado por voz (voxtype)" si
+# En una maquina virtual no hay tarjeta grafica real: gaming viene desmarcado.
+if $ES_VMWARE; then JUEGOS=no; else JUEGOS=si; fi
+agregar gaming "Gaming: Steam, Proton, GameMode, MangoHud, Gamescope y drivers para tu tarjeta grafica" $JUEGOS
+agregar seguridad "Seguridad: nmap, Wireshark y un contenedor Kali con sus 10 herramientas principales (descarga 1,2 GB, ocupa unos 4 GB)" no
 $ES_OMARCHY && agregar fondos "Galeria de fondos en ~/Pictures/Fondos y tema Tokyo Night" si
 $ES_VMWARE && agregar vmware "Ajustes para VMware (resolucion, renderizado, herramientas)" si
 
@@ -144,6 +148,49 @@ for id in "${IDS[@]}"; do
   fi
 done
 
+# Drivers Vulkan (32 y 64 bits) para la tarjeta grafica de este equipo.
+# Steam pide un driver "cualquiera" y pacman --noconfirm elegiria el de NVIDIA,
+# asi que se piden los correctos en la misma orden.
+NVIDIA_NUEVA=false NVIDIA_ANTIGUA=false
+tarjetas() { # tarjetas FABRICANTE: IDs de las tarjetas graficas de ese fabricante
+  local d          # (0x10de NVIDIA, 0x1002 AMD, 0x8086 Intel)
+  for d in /sys/bus/pci/devices/*; do
+    [[ $(<"$d/vendor") == "$1" && $(<"$d/class") == 0x03* ]] && cat "$d/device"
+  done
+  return 0
+}
+nvidia_ids() { tarjetas 0x10de; }
+for id in $(nvidia_ids); do
+  if ((id >= 0x1e00)); then NVIDIA_NUEVA=true; elif ((id >= 0x1340)); then NVIDIA_ANTIGUA=true; fi
+done
+drivers_juegos() {
+  local hay=false
+  if [[ -n $(tarjetas 0x1002) ]]; then printf '%s\n' vulkan-radeon lib32-vulkan-radeon; hay=true; fi
+  if [[ -n $(tarjetas 0x8086) ]]; then printf '%s\n' vulkan-intel lib32-vulkan-intel; hay=true; fi
+  if $NVIDIA_NUEVA; then
+    printf '%s\n' nvidia-utils lib32-nvidia-utils; hay=true
+    $ES_OMARCHY || printf '%s\n' nvidia-open-dkms libva-nvidia-driver
+  elif $NVIDIA_ANTIGUA; then
+    printf '%s\n' nvidia-580xx-utils lib32-nvidia-580xx-utils; hay=true
+    $ES_OMARCHY || printf '%s\n' nvidia-580xx-dkms
+  fi
+  # Sin tarjeta conocida (maquina virtual): Vulkan por software.
+  $hay || printf '%s\n' vulkan-swrast lib32-vulkan-swrast
+  # Los drivers dkms de NVIDIA necesitan los headers de cada kernel instalado.
+  if ! $ES_OMARCHY && { $NVIDIA_NUEVA || $NVIDIA_ANTIGUA; }; then
+    cat /usr/lib/modules/*/pkgbase 2>/dev/null | sed 's/$/-headers/' | sort -u
+  fi
+}
+if quiere gaming; then
+  mapfile -t -O "${#PAQUETES[@]}" PAQUETES < <(drivers_juegos)
+  # Steam esta en el repositorio multilib (programas de 32 bits).
+  if ! grep -q '^\[multilib\]' /etc/pacman.conf; then
+    verde "Activando el repositorio multilib (necesario para Steam)"
+    sudo sed -i '/^#\[multilib\]/,/^#Include/ s/^#//' /etc/pacman.conf
+    sudo pacman -Sy
+  fi
+fi
+
 FALTAN=()
 for p in "${PAQUETES[@]}"; do pacman -Q "$p" &>/dev/null || FALTAN+=("$p"); done
 if ((${#FALTAN[@]})); then
@@ -200,6 +247,7 @@ quiere niri && copiar "$H" .config/niri .config/matugen .local/bin/futurista
 quiere terminales && copiar "$H" .config/alacritty .config/foot .config/ghostty .config/kitty
 $ES_OMARCHY && copiar "$H" .config/mimeapps.list
 quiere herramientas && copiar "$H" .config/mise .claude
+quiere seguridad && copiar "$H" .local/bin/kali
 quiere dictado && copiar "$H" .config/voxtype .config/systemd/user/voxtype.service
 
 if quiere vmware; then
@@ -241,7 +289,7 @@ if ! $ES_OMARCHY; then
   fi
 fi
 
-chmod +x "$HOME"/.local/bin/sesion "$HOME"/.local/bin/futurista "$HOME"/.local/bin/escritorio* "$HOME"/.local/bin/vmware-display-sync 2>/dev/null || true
+chmod +x "$HOME"/.local/bin/sesion "$HOME"/.local/bin/futurista "$HOME"/.local/bin/kali "$HOME"/.local/bin/escritorio* "$HOME"/.local/bin/vmware-display-sync 2>/dev/null || true
 if [[ -d $RESPALDO ]]; then echo "Copia de tus archivos anteriores: $RESPALDO"; fi
 
 # ---------------------------------------------------------------- fondos
@@ -276,6 +324,48 @@ if quiere dictado && command -v voxtype >/dev/null; then
   voxtype setup --download --no-post-install || aviso "No se pudo descargar el modelo de voxtype."
   if command -v omarchy-hw-vulkan >/dev/null && omarchy-hw-vulkan; then
     voxtype setup gpu --enable || true
+  fi
+fi
+
+# ---------------------------------------------------------------- gaming
+if quiere gaming; then
+  verde "Configurando gaming"
+  # GameMode sube la prioridad de los juegos mientras se juega.
+  if getent group gamemode >/dev/null; then sudo usermod -aG gamemode "$USER"; fi
+  # NVIDIA en Arch sin Omarchy (Omarchy ya lo hace al instalarse).
+  if ! $ES_OMARCHY && { $NVIDIA_NUEVA || $NVIDIA_ANTIGUA; }; then
+    echo "options nvidia_drm modeset=1" | sudo tee /etc/modprobe.d/nvidia.conf >/dev/null
+    sudo mkdir -p /etc/mkinitcpio.conf.d
+    echo "MODULES+=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)" | sudo tee /etc/mkinitcpio.conf.d/nvidia.conf >/dev/null
+    sudo mkinitcpio -P || aviso "No se pudo regenerar el arranque (mkinitcpio)."
+  fi
+  if [[ -n $(nvidia_ids) ]] && ! $NVIDIA_NUEVA && ! $NVIDIA_ANTIGUA; then
+    aviso "Tu tarjeta NVIDIA es muy antigua para los drivers actuales: https://wiki.archlinux.org/title/NVIDIA"
+  fi
+  $ES_VMWARE && aviso "En una maquina virtual los juegos iran muy lentos (no hay tarjeta grafica real)."
+fi
+
+# ---------------------------------------------------------------- seguridad
+if quiere seguridad; then
+  verde "Preparando las herramientas de seguridad"
+  # Wireshark sin sudo.
+  if getent group wireshark >/dev/null; then sudo usermod -aG wireshark "$USER"; fi
+  # Los contenedores sin root necesitan un rango de IDs para tu usuario.
+  if ! grep -q "^$USER:" /etc/subuid 2>/dev/null; then
+    sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 "$USER"
+  fi
+  if distrobox list 2>/dev/null | grep -qw kali; then
+    echo "El contenedor Kali ya existe."
+  else
+    echo "Creando el contenedor Kali (tarda unos minutos)..."
+    if distrobox create --yes --name kali --image docker.io/kalilinux/kali-rolling:latest; then
+      echo "Instalando las 10 herramientas principales de Kali (descarga 1,2 GB)..."
+      distrobox enter kali -- sudo env DEBIAN_FRONTEND=noninteractive apt-get update &&
+        distrobox enter kali -- sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y kali-tools-top10 ||
+        aviso "No se instalaron todas las herramientas de Kali; reintenta con: kali sudo apt install kali-tools-top10"
+    else
+      aviso "No se pudo crear el contenedor Kali. Reintenta luego con ./install.sh"
+    fi
   fi
 fi
 
@@ -341,6 +431,13 @@ fi
 if quiere niri; then
   echo "  - En Niri: Super + K muestra todos los atajos."
   echo "  - Modo futurista (animaciones y efectos):  futurista on  /  futurista off"
+fi
+if quiere gaming; then
+  echo "  - Gaming: abre Steam y activa Proton en Ajustes > Compatibilidad."
+  echo "    En un juego, opciones de lanzamiento: gamemoderun mangohud %command%"
+fi
+if quiere seguridad; then
+  echo "  - Seguridad: escribe  kali  en una terminal para entrar al contenedor Kali."
 fi
 echo
 echo "Para agregar algo que no elegiste, vuelve a ejecutar ./install.sh"

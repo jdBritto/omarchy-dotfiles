@@ -1,0 +1,10 @@
+# Gaming. Los drivers Vulkan de 32 y 64 bits los elige install.sh segun tu
+# tarjeta grafica (si no, Steam instalaria los de NVIDIA en cualquier equipo).
+steam
+gamemode
+lib32-gamemode
+mangohud
+lib32-mangohud
+gamescope
+# Para instalar versiones extra de Proton (GE-Proton). Viene del AUR.
+protonplus

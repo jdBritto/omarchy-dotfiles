@@ -1,0 +1,6 @@
+# Seguridad. Las herramientas grandes van dentro de un contenedor Kali
+# (distrobox) para no mezclarlas con el sistema; aqui solo lo basico.
+distrobox
+podman
+nmap
+wireshark-qt
