@@ -15,9 +15,11 @@ git clone https://github.com/jdBritto/omarchy-dotfiles.git ~/omarchy-dotfiles
 ~/omarchy-dotfiles/install.sh
 ```
 
-   Al empezar muestra una lista para elegir qué instalar (escribes los
-   números para marcar o desmarcar) y, si elegiste Hyprland y Niri, con cuál
-   arrancar. Para instalar lo recomendado sin preguntas: `install.sh --si`.
+   Al empezar muestra un menú para elegir qué instalar: te mueves con las
+   flechas (o `j`/`k`), marcas o desmarcas con **Espacio** (o con el número de
+   la opción), `a` marca todo, `n` nada, **Enter** continúa y `q` sale sin
+   cambiar nada. Si elegiste Hyprland y Niri, después eliges con flechas con
+   cuál arrancar. Para instalar lo recomendado sin preguntas: `install.sh --si`.
 
 3. Reinicia el equipo.
 
@@ -32,7 +34,7 @@ git clone https://github.com/jdBritto/omarchy-dotfiles.git ~/omarchy-dotfiles
 ~/omarchy-dotfiles/install.sh
 ```
 
-La lista agrega la opción **Base del sistema** (audio, red, Bluetooth,
+El menú agrega la opción **Base del sistema** (audio, red, Bluetooth,
 fuentes, terminal Ghostty, archivos y la pantalla de inicio SDDM), que Omarchy
 ya trae. El escritorio es **Niri con DankMaterialShell**: la configuración de
 Hyprland de este repo necesita Omarchy, así que no aparece. Los paquetes del

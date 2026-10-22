@@ -1,7 +1,7 @@
 #!/bin/bash
 # Instala mi entorno de trabajo con DankMaterialShell (DMS).
-# Funciona sobre Omarchy o sobre Arch Linux limpio. Al empezar muestra una
-# lista para elegir que instalar.
+# Funciona sobre Omarchy o sobre Arch Linux limpio. Al empezar muestra un
+# menu para elegir que instalar (flechas y Espacio).
 #
 # Uso:  ./install.sh              (pregunta todo)
 #       ./install.sh --si         (sin preguntas: lo recomendado)
@@ -51,61 +51,127 @@ if [[ $SESION == hyprland ]] && ! $ES_OMARCHY; then
   error "Hyprland con esta configuracion necesita Omarchy. En Arch limpio usa Niri."
 fi
 
-# ---------------------------------------------------------------- que instalar
-# Cada componente: id, descripcion y si viene marcado.
-IDS=()
-declare -A DESC MARCA
-agregar() { IDS+=("$1"); DESC[$1]=$2; MARCA[$1]=$3; }
+# ---------------------------------------------------------------- logo
+logo() {
+  local colores=(117 111 105 141 177 183) i=0 linea
+  while IFS= read -r linea; do
+    printf '\033[1;38;5;%sm%s\033[0m\n' "${colores[i % ${#colores[@]}]}" "$linea"
+    i=$((i + 1))
+  done <<'LOGO'
 
-$ES_OMARCHY || agregar base "Base del sistema: audio, red, Bluetooth, fuentes, terminal, archivos y pantalla de inicio" si
-$ES_OMARCHY && agregar hyprland "Hyprland con DMS y el selector 'escritorio' (DMS u Omarchy)" si
-agregar niri "Niri con DMS (ventanas en columnas que se desplazan de lado)" si
-agregar futurista "Modo futurista en Niri: animaciones holograma, borde neon y cristal; los colores siguen al fondo" si
-agregar terminales "Ajustes de terminales (Ghostty, Kitty, Alacritty, Foot)" si
-agregar apps "Apps: Firefox, nano, cava" si
-agregar herramientas "Herramientas de desarrollo: claude, codex, gh, node, opencode" si
-agregar dictado "Dictado por voz (voxtype)" si
+   █████╗ ██████╗  ██████╗██╗  ██╗       ██████╗ ███╗   ███╗███████╗
+  ██╔══██╗██╔══██╗██╔════╝██║  ██║       ██╔══██╗████╗ ████║██╔════╝
+  ███████║██████╔╝██║     ███████║  ━╋━  ██║  ██║██╔████╔██║███████╗
+  ██╔══██║██╔══██╗██║     ██╔══██║       ██║  ██║██║╚██╔╝██║╚════██║
+  ██║  ██║██║  ██║╚██████╗██║  ██║       ██████╔╝██║ ╚═╝ ██║███████║
+  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝       ╚═════╝ ╚═╝     ╚═╝╚══════╝
+LOGO
+  printf '\033[2m  DankMaterialShell sobre %s\033[0m\n\n' "$BASE"
+}
+limpiar() { printf '\033[H\033[2J'; }
+
+# ---------------------------------------------------------------- que instalar
+# Cada componente: id, nombre corto, detalle y si viene marcado.
+IDS=()
+declare -A NOMBRE DESC MARCA
+agregar() { IDS+=("$1"); NOMBRE[$1]=$2; DESC[$1]=$3; MARCA[$1]=$4; }
+
+$ES_OMARCHY || agregar base "Base del sistema" "Audio, red, Bluetooth, fuentes, terminal, archivos y pantalla de inicio." si
+$ES_OMARCHY && agregar hyprland "Hyprland" "Hyprland con DMS y el selector 'escritorio' (DMS u Omarchy)." si
+agregar niri "Niri" "Niri con DMS: ventanas en columnas que se desplazan de lado." si
+agregar futurista "Modo futurista" "Solo en Niri: animaciones holograma, borde neon y cristal; los colores siguen al fondo." si
+agregar terminales "Terminales" "Ajustes de Ghostty, Kitty, Alacritty y Foot." si
+agregar apps "Apps" "Firefox, nano y cava." si
+agregar herramientas "Herramientas de desarrollo" "claude, codex, gh, node y opencode (con mise)." si
+agregar dictado "Dictado por voz" "voxtype." si
 # En una maquina virtual no hay tarjeta grafica real: gaming viene desmarcado.
 if $ES_VMWARE; then JUEGOS=no; else JUEGOS=si; fi
-agregar gaming "Gaming: Steam, Proton, GameMode, MangoHud, Gamescope y drivers para tu tarjeta grafica" $JUEGOS
-agregar seguridad "Seguridad: nmap, Wireshark y un contenedor Kali con sus 10 herramientas principales (descarga 1,2 GB, ocupa unos 4 GB)" no
-$ES_OMARCHY && agregar fondos "Galeria de fondos en ~/Pictures/Fondos y tema Tokyo Night" si
-$ES_VMWARE && agregar vmware "Ajustes para VMware (resolucion, renderizado, herramientas)" si
+agregar gaming "Gaming" "Steam, Proton, GameMode, MangoHud, Gamescope y drivers para tu tarjeta grafica." $JUEGOS
+agregar seguridad "Seguridad" "nmap, Wireshark y un contenedor Kali con sus 10 herramientas principales (descarga 1,2 GB, ocupa unos 4 GB)." no
+$ES_OMARCHY && agregar fondos "Galeria de fondos" "Fondos de los temas de Omarchy en ~/Pictures/Fondos y tema Tokyo Night." si
+$ES_VMWARE && agregar vmware "Ajustes para VMware" "Resolucion, renderizado y herramientas de la maquina virtual." si
 
 quiere() { [[ ${MARCA[$1]:-no} == si ]]; }
+cambiar() { if quiere "$1"; then MARCA[$1]=no; else MARCA[$1]=si; fi; }
 
-mostrar_menu() {
-  echo
-  echo "Que quieres instalar? DankMaterialShell se instala siempre."
-  local i=1
-  for id in "${IDS[@]}"; do
-    if quiere "$id"; then x="x"; else x=" "; fi
-    printf '  %2d) [%s] %s\n' "$i" "$x" "${DESC[$id]}"
-    i=$((i + 1))
-  done
-  $ES_OMARCHY || echo "      (Hyprland no aparece: esta configuracion de Hyprland necesita Omarchy)"
+# Lee una tecla; las flechas llegan como Esc + [A / [B.
+leer_tecla() {
+  local resto
+  IFS= read -rsn1 TECLA || exit 1
+  if [[ $TECLA == $'\e' ]]; then
+    IFS= read -rsn2 -t 0.1 resto || true
+    TECLA+=$resto
+  fi
 }
 
-if $PREGUNTAR; then
+# Menu con flechas: arriba/abajo (o j/k) para moverse, Espacio marca o desmarca.
+menu() {
+  local actual=0 total=${#IDS[@]} i id marca nota=""
+  printf '\033[?25l'                 # ocultar el cursor mientras se elige
+  trap 'printf "\033[?25h"' EXIT
   while true; do
-    mostrar_menu
-    echo "Escribe los numeros que quieres marcar o desmarcar (ej: 3 5) y Enter."
-    read -rp "Enter sin nada para continuar: " r
-    [[ -z $r ]] && {
-      if quiere niri || quiere hyprland; then break; fi
-      aviso "Elige al menos un escritorio (Hyprland o Niri)."
-      continue
-    }
-    for n in $r; do
-      if [[ $n =~ ^[0-9]+$ ]] && ((n >= 1 && n <= ${#IDS[@]})); then
-        id=${IDS[n - 1]}
-        if quiere "$id"; then MARCA[$id]=no; else MARCA[$id]=si; fi
+    limpiar
+    logo
+    echo "  Elige que instalar (DankMaterialShell se instala siempre):"
+    echo
+    for i in "${!IDS[@]}"; do
+      id=${IDS[i]}
+      if quiere "$id"; then marca='\033[1;32m[x]\033[0m'; else marca='\033[2m[ ]\033[0m'; fi
+      if ((i == actual)); then
+        printf '  \033[1;35m❯\033[0m %b \033[1;35m%s\033[0m\n' "$marca" "${NOMBRE[$id]}"
       else
-        aviso "Numero no valido: $n"
+        printf '    %b %s\n' "$marca" "${NOMBRE[$id]}"
       fi
     done
+    $ES_OMARCHY || printf '\n  \033[2m(Hyprland no aparece: esta configuracion de Hyprland necesita Omarchy)\033[0m\n'
+    printf '\n  \033[3m%s\033[0m\n' "${DESC[${IDS[actual]}]}"
+    if [[ -n $nota ]]; then printf '  \033[1;33m%s\033[0m\n' "$nota"; else echo; fi
+    printf '\n  \033[2m↑↓ moverse   Espacio marcar   a todo   n nada   Enter continuar   q salir\033[0m\n'
+
+    leer_tecla
+    nota=""
+    case $TECLA in
+      $'\e[A' | k) actual=$(((actual - 1 + total) % total)) ;;
+      $'\e[B' | j) actual=$(((actual + 1) % total)) ;;
+      ' ') cambiar "${IDS[actual]}" ;;
+      [1-9]) if ((TECLA <= total)); then actual=$((TECLA - 1)); cambiar "${IDS[actual]}"; fi ;;
+      a | A) for id in "${IDS[@]}"; do MARCA[$id]=si; done ;;
+      n | N) for id in "${IDS[@]}"; do MARCA[$id]=no; done ;;
+      '') if quiere niri || quiere hyprland; then break; fi
+          nota="Elige al menos un escritorio (Hyprland o Niri)." ;;
+      q | Q) limpiar; echo "Cancelado. No se cambio nada."; exit 0 ;;
+    esac
   done
-fi
+}
+
+# elegir_uno TITULO OPCION...: menu con flechas para elegir una; deja el numero en ELEGIDO.
+elegir_uno() {
+  local titulo=$1; shift
+  local opciones=("$@") actual=0 i
+  while true; do
+    limpiar
+    logo
+    echo "  $titulo"
+    echo
+    for i in "${!opciones[@]}"; do
+      if ((i == actual)); then
+        printf '  \033[1;35m❯ %s\033[0m\n' "${opciones[i]}"
+      else
+        printf '    %s\n' "${opciones[i]}"
+      fi
+    done
+    printf '\n  \033[2m↑↓ moverse   Enter elegir   (despues puedes cambiar con: sesion alternar)\033[0m\n'
+    leer_tecla
+    case $TECLA in
+      $'\e[A' | k) actual=$(((actual - 1 + ${#opciones[@]}) % ${#opciones[@]})) ;;
+      $'\e[B' | j) actual=$(((actual + 1) % ${#opciones[@]})) ;;
+      '') ELEGIDO=$actual; return ;;
+      q | Q) limpiar; echo "Cancelado. No se cambio nada."; exit 0 ;;
+    esac
+  done
+}
+
+if $PREGUNTAR; then menu; fi
 
 # Si se pidio una sesion por opcion, ese escritorio tiene que instalarse.
 [[ -n $SESION ]] && MARCA[$SESION]=si
@@ -115,21 +181,17 @@ if [[ -z $SESION ]]; then
   if quiere hyprland && quiere niri; then
     SESION=hyprland
     if $PREGUNTAR; then
-      echo
-      echo "Con que escritorio quieres arrancar el equipo?"
-      echo "  1) Hyprland   [por defecto]"
-      echo "  2) Niri"
-      echo "Despues puedes cambiar con: sesion alternar"
-      read -rp "Elige 1 o 2: " r
-      [[ $r == 2 ]] && SESION=niri
+      elegir_uno "Con que escritorio quieres arrancar el equipo?" "Hyprland" "Niri"
+      if ((ELEGIDO == 1)); then SESION=niri; fi
     fi
   elif quiere hyprland; then SESION=hyprland
   else SESION=niri
   fi
 fi
 
-echo
-echo "Se va a instalar: DankMaterialShell$(for id in "${IDS[@]}"; do quiere "$id" && printf ', %s' "$id"; done)"
+if $PREGUNTAR; then printf '\033[?25h'; limpiar; fi
+logo
+echo "Se va a instalar: DankMaterialShell$(for id in "${IDS[@]}"; do quiere "$id" && printf ', %s' "${NOMBRE[$id]}"; done)"
 echo "Escritorio al arrancar: $SESION"
 if $PREGUNTAR; then
   read -rp "Continuar? [S/n] " r
