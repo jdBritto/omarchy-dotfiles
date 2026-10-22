@@ -1,0 +1,13 @@
+[Unit]
+Description=Keep the VMware guest display in step with the host window size
+Documentation=man:hyprland(5)
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/vmware-display-sync
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

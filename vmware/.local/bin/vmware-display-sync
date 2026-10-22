@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Keep the Hyprland output proportional to the VMware Workstation window.
+#
+# The vmwgfx driver advertises the host window's dimensions as the virtual
+# connector's *preferred* mode, and lists that mode first in the sysfs
+# "modes" file. Hyprland only resolves "preferred" when it loads its config,
+# so resizing the VMware window (or entering full-screen mode) otherwise
+# leaves the guest at the old resolution and the desktop stops matching the
+# window.
+#
+# Poll the preferred mode and re-apply the monitor rule whenever the running
+# resolution drifts away from it. Only the resolution is touched; the scale is
+# read back from the running compositor so this script never overrides the
+# scale configured in ~/.config/hypr/monitors.lua.
+
+set -u
+
+output="${VMWARE_DISPLAY_OUTPUT:-Virtual-1}"
+sysfs="/sys/class/drm/card0-${output}/modes"
+
+# The connector may appear a little after the compositor does.
+until [[ -r $sysfs ]] && hyprctl monitors >/dev/null 2>&1; do
+    sleep 2
+done
+
+current_mode() {
+    hyprctl monitors -j 2>/dev/null |
+        jq -r --arg out "$output" 'map(select(.name == $out)) | .[0] | "\(.width)x\(.height)"' 2>/dev/null
+}
+
+current_scale() {
+    local scale
+    scale=$(hyprctl monitors -j 2>/dev/null |
+        jq -r --arg out "$output" 'map(select(.name == $out)) | .[0].scale // 1' 2>/dev/null)
+    [[ $scale =~ ^[0-9]+([.][0-9]+)?$ ]] || scale=1
+    printf '%s' "$scale"
+}
+
+apply_mode() {
+    local mode=$1 scale=$2
+    hyprctl eval "hl.monitor({ output = \"${output}\", mode = \"${mode}\", position = \"auto\", scale = ${scale} })" \
+        >/dev/null 2>&1
+}
+
+while true; do
+    desired=$(head -n1 "$sysfs" 2>/dev/null)
+    actual=$(current_mode)
+
+    if [[ -n $desired && $desired != "$actual" ]]; then
+        scale=$(current_scale)
+
+        # Applying an explicit mode string makes the compositor re-read the
+        # connector's mode list, so the new host size is known to it.
+        apply_mode "$desired" "$scale"
+        sleep 1
+
+        # If the explicit size was not available, fall back to "preferred".
+        if [[ $(current_mode) != "$desired" ]]; then
+            apply_mode "preferred" "$scale"
+        fi
+    fi
+
+    sleep 2
+done

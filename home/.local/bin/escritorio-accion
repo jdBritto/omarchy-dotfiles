@@ -1,0 +1,48 @@
+#!/bin/bash
+# Ejecuta una accion del escritorio usando DMS u Omarchy segun cual este activo.
+# Lo usan los atajos de teclado de ~/.config/hypr/bindings.lua.
+
+accion=$1
+modo=$(cat "$HOME/.config/escritorio-modo" 2>/dev/null || echo omarchy)
+
+if [[ $modo == dms ]]; then
+  case $accion in
+    aplicaciones)   dms ipc call spotlight toggle ;;
+    menu)           dms ipc call launcher toggle ;;
+    apagar)         dms ipc call powermenu toggle ;;
+    temas)          dms ipc call settings focusOrToggleWith theme ;;
+    fondos)         dms ipc call dankdash wallpaper ;;
+    ajustes)        dms ipc call settings focusOrToggle ;;
+    portapapeles)   dms ipc call clipboard toggle ;;
+    panel)          dms ipc call control-center toggle ;;
+    notificaciones) dms ipc call notifications toggle ;;
+    limpiar-notif)  dms ipc call notifications clearAll ;;
+    atajos)         dms ipc call keybinds toggle ;;
+    bloquear)       dms ipc call lock lock ;;
+    procesos)       dms ipc call processlist focusOrToggle ;;
+    calendario)     dms ipc call dash toggle ;;
+    play)           dms ipc call mpris playPause ;;
+    siguiente)      dms ipc call mpris next ;;
+    anterior)       dms ipc call mpris previous ;;
+  esac
+else
+  case $accion in
+    aplicaciones)   omarchy-menu toggle apps ;;
+    menu)           omarchy-menu toggle ;;
+    apagar)         omarchy-menu toggle system ;;
+    temas)          omarchy-menu toggle theme ;;
+    fondos)         omarchy-menu toggle background ;;
+    ajustes)        omarchy-menu toggle ;;
+    portapapeles)   omarchy-shell shell toggle omarchy.clipboard ;;
+    panel)          omarchy-shell shell toggle omarchy.audio ;;
+    notificaciones) omarchy-shell notifications showHistory ;;
+    limpiar-notif)  omarchy-shell notifications dismissAll ;;
+    atajos)         omarchy-menu-keybindings ;;
+    bloquear)       omarchy-system-lock ;;
+    procesos)       omarchy-launch-or-focus-tui btop ;;
+    calendario)     omarchy-shell shell toggle omarchy.clock ;;
+    play)           omarchy-shell media playPause ;;
+    siguiente)      omarchy-shell media next ;;
+    anterior)       omarchy-shell media previous ;;
+  esac
+fi

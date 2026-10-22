@@ -1,0 +1,12 @@
+# Paquetes extra sobre una instalacion normal de Omarchy (uno por linea)
+
+dms-shell
+matugen
+cava
+cliphist
+accountsservice
+qt6ct
+firefox
+nano
+voxtype-bin
+wtype

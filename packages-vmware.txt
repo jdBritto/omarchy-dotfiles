@@ -1,0 +1,2 @@
+# Solo si el equipo es una maquina virtual VMware
+open-vm-tools
