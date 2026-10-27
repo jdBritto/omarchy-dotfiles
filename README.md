@@ -147,28 +147,14 @@ anticheat (Valorant, League of Legends, Fortnite…) no funcionan en Linux.
 
 ## Zsh hacker
 
-Opción **Zsh hacker** del instalador. Kitty abre **Zsh** (bash sigue siendo el shell
-del sistema) con:
+Opción **Zsh hacker** del instalador: descarga
+[jdBritto/zsh-hacker](https://github.com/jdBritto/zsh-hacker) en `~/zsh-hacker` y lo
+instala. Kitty abre **Zsh** con Oh My Zsh, Powerlevel10k en verde/cian, bienvenida
+con fastfetch, `ls` con iconos y alias de hacking. Bash sigue siendo el shell del sistema.
 
-- **Oh My Zsh** con plugins: git, archlinux, docker, extract, copypath, copyfile,
-  copybuffer, nmap, python, web-search, encode64, urltools, jsontools, aliases y
-  you-should-use.
-- **Powerlevel10k** en bloques verde/cian: usuario, carpeta, git, IP de la VPN,
-  IP local y hora. Los comandos anteriores se reducen a `❯ comando`.
-- **Bienvenida** con fastfetch al abrir la terminal y una línea con LAN, VPN y la ayuda.
-- Sugerencias en gris, colores de sintaxis, menú con Tab (fzf-tab), `Esc Esc` para
-  `sudo`, `ls` con iconos (eza) y alias de hacking (`serve`, `box`, `nmapq`...).
-
-```bash
-atajos                    # ayuda con todos los atajos y alias
-estilo-prompt starship    # volver al prompt estilo Kali (Starship)
-estilo-prompt p10k        # volver a Powerlevel10k
-p10k reload               # aplicar cambios de ~/.config/zsh/p10k-hacker.zsh
-```
-
-Los colores del prompt están en `~/.config/zsh/p10k-hacker.zsh`, que se aplica
-encima de la plantilla `~/.p10k.zsh`. Oh My Zsh, Powerlevel10k, fzf-tab y
-you-should-use se descargan con git durante la instalación.
+Ese repositorio funciona en cualquier distro (Debian, Ubuntu, Fedora, openSUSE...).
+Escribe `atajos` en la terminal para ver la ayuda. `actualizar.sh` también guarda
+los cambios de la terminal en su repositorio.
 
 ## Seguridad
 

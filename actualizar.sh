@@ -16,6 +16,11 @@ for arbol in "${ARBOLES[@]}"; do
   done < <(find "$REPO/$arbol" -type f -print0)
 done
 
+# La terminal (Zsh hacker) tiene su propio repositorio.
+if [[ -x $HOME/zsh-hacker/actualizar.sh ]]; then
+  "$HOME/zsh-hacker/actualizar.sh" "${1:-Actualizar configuracion $(date +%F)}" || true
+fi
+
 cd "$REPO"
 git add -A
 if git diff --cached --quiet; then
