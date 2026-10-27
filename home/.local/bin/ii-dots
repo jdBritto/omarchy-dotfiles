@@ -101,6 +101,32 @@ ajustes() {
   if ((${#falta[@]})); then sudo usermod -aG "$(IFS=,; echo "${falta[*]}")" "$USER"; fi
   [[ -f /etc/modules-load.d/i2c-dev.conf ]] || echo i2c-dev | sudo tee /etc/modules-load.d/i2c-dev.conf >/dev/null
   systemctl --user enable ydotool.service 2>/dev/null || aviso "No se pudo activar ydotool"
+
+  teclado
+}
+
+teclado() {
+  # end4-pC trae el teclado "us" y lo escribe en hyprland/shellOverrides/main.lua,
+  # que se carga al final y gana a custom/general.lua. Se usa el del sistema.
+  local kb
+  kb=$(sed -n 's/^XKBLAYOUT=//p' /etc/vconsole.conf 2>/dev/null | head -1)
+  kb=${kb:-latam}
+  verde "Teclado de illogical-impulse: $kb"
+  sed -i "s/kb_layout = \"[^\"]*\"/kb_layout = \"$kb\"/" "$CFG/hypr/hyprland/shellOverrides/main.lua" 2>/dev/null || true
+  # config.json del shell: el panel de ajustes regenera main.lua desde aqui.
+  mkdir -p "$CFG/illogical-impulse"
+  KB="$kb" F="$CFG/illogical-impulse/config.json" python3 - <<'PY'
+import json, os
+f = os.environ["F"]
+try:
+    d = json.load(open(f))
+except FileNotFoundError:
+    d = {}
+except ValueError:
+    raise SystemExit("config.json no es JSON valido; no se cambia el teclado ahi")
+d.setdefault("hyprland", {}).setdefault("input", {})["kbLayout"] = os.environ["KB"]
+json.dump(d, open(f, "w"), indent=4)
+PY
 }
 
 case "${1:-}" in
