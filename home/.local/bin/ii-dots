@@ -1,0 +1,127 @@
+#!/bin/bash
+# illogical-impulse (end-4/dots-hyprland) con el shell end4-pC, al lado de
+# Omarchy, DMS y Niri sin pisarlos.
+#
+#   ii-dots instalar     -> descargar y colocar los archivos (seguro repetirlo)
+#   ii-dots actualizar   -> traer lo ultimo de ambos proyectos y volver a colocarlos
+#   ii-dots estado       -> ver versiones instaladas
+#
+# Los paquetes se instalan con ./install.sh (opcion illogical-impulse) o con
+#   sudo pacman -S --needed $(grep -vE '^\s*(#|$)' paquetes/ii.txt)   (+ yay para el AUR)
+#
+# A diferencia del instalador oficial (./setup install), NO reemplaza:
+# hyprland.lua de Omarchy, kitty, foot, fish, fontconfig, starship ni quickshell.
+# Para usarlo:  escritorio ii   (y para volver: escritorio omarchy)
+
+set -euo pipefail
+
+SRC="${XDG_DATA_HOME:-$HOME/.local/share}/ii-dots"
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}"
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}"
+II_REPO=https://github.com/end-4/dots-hyprland.git
+PC_REPO=https://github.com/pctrade/end4-pC.git
+PC_DIR="$CFG/quickshell/end4-pC"
+
+verde() { printf '\n\033[1;32m==> %s\033[0m\n' "$*"; }
+aviso() { printf '\033[1;33m[aviso] %s\033[0m\n' "$*"; }
+
+traer() { # traer URL CARPETA: clona o actualiza un repo
+  if [[ -d $2/.git ]]; then
+    git -C "$2" pull --ff-only --quiet || aviso "No se pudo actualizar $2 (cambios locales?)"
+  else
+    mkdir -p "$(dirname "$2")"
+    git clone --quiet --depth 1 "$1" "$2"
+  fi
+}
+
+si_falta() { # si_falta ORIGEN DESTINO: copia solo si el destino no existe
+  [[ -e $2 ]] && return 0
+  mkdir -p "$(dirname "$2")"
+  cp -a "$1" "$2"
+}
+
+archivos() {
+  local D="$SRC/dots-hyprland/dots"
+
+  verde "Shell de illogical-impulse (ii) y end4-pC"
+  mkdir -p "$CFG/quickshell"
+  rsync -a --delete "$D/.config/quickshell/ii/" "$CFG/quickshell/ii/"
+  traer "$PC_REPO" "$PC_DIR"
+
+  verde "Configuracion de Hyprland de illogical-impulse"
+  # hypr/hyprland/ es solo de ii; hypr/custom/ es tuyo (no se pisa lo que ya exista).
+  rsync -a --delete "$D/.config/hypr/hyprland/" "$CFG/hypr/hyprland/"
+  rsync -a --ignore-existing "$D/.config/hypr/custom/" "$CFG/hypr/custom/"
+  rsync -a "$D/.config/hypr/hyprlock/" "$CFG/hypr/hyprlock/"
+  # Entrada de ii: la carga hyprland.lua cuando el modo es "ii".
+  cp "$D/.config/hypr/hyprland.lua" "$CFG/hypr/ii.lua"
+  si_falta "$D/.config/hypr/hyprlock.conf" "$CFG/hypr/hyprlock.conf"
+  si_falta "$D/.config/hypr/hypridle.conf" "$CFG/hypr/hypridle.conf"
+
+  verde "Colores (matugen)"
+  # Plantillas de ii junto a las tuyas (la del modo futurista se conserva).
+  rsync -a "$D/.config/matugen/templates/" "$CFG/matugen/templates/"
+  local f
+  for f in "$CFG/matugen/config.toml" "$CFG/matugen/config.toml.orig"; do
+    [[ -f $f ]] || continue
+    grep -q '^# illogical-impulse' "$f" && continue
+    { echo; echo '# illogical-impulse (agregado por ii-dots)'
+      sed -n '/^\[templates\./,$p' "$D/.config/matugen/config.toml"; } >>"$f"
+  done
+  si_falta "$D/.config/matugen/config.toml" "$CFG/matugen/config.toml"
+
+  verde "Apps que usa ii (solo si no existen)"
+  for f in fuzzel wlogout Kvantum kde-material-you-colors darklyrc kdeglobals dolphinrc konsolerc; do
+    si_falta "$D/.config/$f" "$CFG/$f"
+  done
+  [[ -d $D/.local/share/konsole ]] && rsync -a --ignore-existing "$D/.local/share/konsole/" "$HOME/.local/share/konsole/"
+  si_falta "$D/.local/share/icons/illogical-impulse.svg" "$HOME/.local/share/icons/illogical-impulse.svg"
+}
+
+ajustes() {
+  verde "Entorno de Python de ii (~/.local/state/quickshell/.venv)"
+  local venv="$STATE/quickshell/.venv"
+  mkdir -p "$venv"
+  UV_NO_MODIFY_PATH=1 uv venv --allow-existing --prompt .venv "$venv" -p 3.12 >/dev/null
+  VIRTUAL_ENV="$venv" uv pip install --quiet --python "$venv/bin/python" \
+    -r "$SRC/dots-hyprland/sdata/uv/requirements.txt"
+
+  verde "Fuente Google Sans Flex"
+  if ! fc-list | grep -qi 'Google Sans Flex'; then
+    traer https://github.com/end-4/google-sans-flex "$SRC/google-sans-flex"
+    mkdir -p "$HOME/.local/share/fonts"
+    rsync -a --exclude .git "$SRC/google-sans-flex/" "$HOME/.local/share/fonts/illogical-impulse-google-sans-flex/"
+    fc-cache -f >/dev/null
+  fi
+
+  verde "Permisos (brillo de monitores externos y teclado virtual)"
+  getent group i2c >/dev/null || sudo groupadd i2c
+  local falta=()
+  for g in video i2c input; do id -nG "$USER" | grep -qw "$g" || falta+=("$g"); done
+  if ((${#falta[@]})); then sudo usermod -aG "$(IFS=,; echo "${falta[*]}")" "$USER"; fi
+  [[ -f /etc/modules-load.d/i2c-dev.conf ]] || echo i2c-dev | sudo tee /etc/modules-load.d/i2c-dev.conf >/dev/null
+  systemctl --user enable ydotool.service 2>/dev/null || aviso "No se pudo activar ydotool"
+}
+
+case "${1:-}" in
+  instalar | actualizar)
+    command -v rsync >/dev/null || { echo "Falta rsync: instala los paquetes primero (paquetes/ii.txt)."; exit 1; }
+    verde "Descargando illogical-impulse (end-4/dots-hyprland)"
+    traer "$II_REPO" "$SRC/dots-hyprland"
+    archivos
+    ajustes
+    verde "Listo"
+    echo "Para usarlo:  escritorio ii   (se aplica al reiniciar)"
+    ;;
+  estado)
+    for r in "$SRC/dots-hyprland" "$PC_DIR"; do
+      if [[ -d $r/.git ]]; then printf '%-45s %s\n' "$r" "$(git -C "$r" log -1 --format='%h %cs')"
+      else printf '%-45s %s\n' "$r" "no instalado"; fi
+    done
+    echo "Escritorio activo: $(cat "$CFG/escritorio-modo" 2>/dev/null || echo omarchy)"
+    ;;
+  *)
+    sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
+    exit 1
+    ;;
+esac

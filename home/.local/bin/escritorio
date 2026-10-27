@@ -3,6 +3,7 @@
 #
 #   escritorio dms       -> usar DankMaterialShell
 #   escritorio omarchy   -> volver al escritorio de Omarchy
+#   escritorio ii        -> illogical-impulse con end4-pC (pide reiniciar)
 #   escritorio alternar  -> cambiar al otro
 #   escritorio estado    -> mostrar cual esta activo
 #   escritorio arranque  -> (uso interno) se ejecuta al iniciar sesion
@@ -27,8 +28,20 @@ stop_dms() {
   return 0
 }
 
+# Entrar o salir de illogical-impulse cambia toda la configuracion de Hyprland
+# y la sesion de inicio: eso lo hace `sesion`, que ofrece reiniciar.
+salir_de_ii() {
+  [[ $(modo) == ii ]] || return 0
+  echo "$1" >"$MODE_FILE"
+  exec sesion hyprland
+}
+
 case "${1:-estado}" in
+  ii)
+    exec sesion ii
+    ;;
   dms)
+    salir_de_ii dms
     echo dms >"$MODE_FILE"
     stop_omarchy_shell
     start_dms
@@ -36,6 +49,7 @@ case "${1:-estado}" in
     echo "DankMaterialShell activado."
     ;;
   omarchy)
+    salir_de_ii omarchy
     echo omarchy >"$MODE_FILE"
     stop_dms
     hyprctl reload >/dev/null
@@ -43,7 +57,7 @@ case "${1:-estado}" in
     echo "Escritorio de Omarchy activado."
     ;;
   alternar)
-    [[ $(modo) == dms ]] && exec "$0" omarchy || exec "$0" dms
+    [[ $(modo) == omarchy ]] && exec "$0" dms || exec "$0" omarchy
     ;;
   arranque)
     [[ $(modo) == dms ]] || exit 0
@@ -59,7 +73,7 @@ case "${1:-estado}" in
     echo "Escritorio activo: $(modo)"
     ;;
   *)
-    sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'
     exit 1
     ;;
 esac

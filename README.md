@@ -63,6 +63,43 @@ pantalla en negro.
 
 En Niri, `Super + Tab` muestra la vista general y `Super + K` la lista de atajos.
 
+## illogical-impulse con end4-pC (opcional)
+
+Opción **illogical-impulse (end4-pC)** del instalador (solo en Omarchy,
+desmarcada por defecto). Es Hyprland con el escritorio
+[illogical-impulse](https://github.com/end-4/dots-hyprland) de end-4 y el shell
+[end4-pC](https://github.com/pctrade/end4-pC) de pctrade: Material 3
+Expressive, widgets en el escritorio, letras de canciones, fondos en línea,
+barra configurable, asistente de IA y presets de la comunidad.
+
+```bash
+escritorio ii       # usar illogical-impulse (pide reiniciar)
+escritorio omarchy  # volver a Omarchy (o: escritorio dms)
+ii-dots actualizar  # traer lo último de illogical-impulse y end4-pC
+ii-dots estado      # ver versiones instaladas
+```
+
+No usa el instalador oficial (`./setup install`) porque reemplaza el
+`hyprland.lua` de Omarchy y borra configuraciones de kitty, foot, fish,
+matugen y fuentes. `ii-dots` coloca solo lo que necesita:
+
+- `~/.config/quickshell/ii` y `~/.config/quickshell/end4-pC` (los shells).
+- `~/.config/hypr/hyprland/` y `~/.config/hypr/ii.lua` (configuración de
+  Hyprland de ii). `hyprland.lua` la carga en lugar de la de Omarchy cuando
+  `~/.config/escritorio-modo` dice `ii`.
+- `~/.config/hypr/custom/`: tus ajustes para ii (teclado latam, end4-pC como
+  shell, atajos). No se pisan al actualizar.
+- Plantillas de colores de matugen, **sumadas** a las tuyas (la del modo
+  futurista sigue).
+- El Quickshell de Omarchy se mantiene: ii pide la versión 0.3.2 y es la misma.
+
+Arranca con la sesión *Hyprland* normal, sin UWSM (illogical-impulse no se
+lleva bien con UWSM); Omarchy sigue usando la suya.
+
+Atajos dentro de illogical-impulse: `Super + F1` lista de atajos,
+`Super + Escape` ajustes de end4-pC, `Ctrl + Super + T` elegir fondo,
+`Super + Enter` terminal, `Super + Q` cerrar ventana.
+
 ## Modo futurista
 
 Opcional en el instalador (viene marcado) y solo para Niri. Añade:

@@ -1,9 +1,10 @@
 #!/bin/bash
-# Elige con que gestor de ventanas arranca el equipo.
+# Elige con que escritorio arranca el equipo.
 #
 #   sesion hyprland   -> Omarchy (Hyprland). Con `escritorio` eliges DMS u Omarchy.
+#   sesion ii         -> Hyprland con illogical-impulse (shell end4-pC)
 #   sesion niri       -> Niri con DankMaterialShell
-#   sesion alternar   -> cambiar al otro
+#   sesion alternar   -> cambiar entre Hyprland y Niri
 #   sesion estado     -> mostrar cual esta elegido
 #
 # Despues de cambiar pregunta si quieres reiniciar el equipo ahora.
@@ -11,14 +12,31 @@
 # queda activa por detras y la nueva arranca con la pantalla en negro.)
 
 CONF=/etc/sddm.conf.d/autologin.conf
+MODE_FILE="$HOME/.config/escritorio-modo"
+
+modo() { [[ -f $MODE_FILE ]] && cat "$MODE_FILE" || echo omarchy; }
 
 actual() {
-  if grep -q '^Session=niri' "$CONF" 2>/dev/null; then echo niri; else echo hyprland; fi
+  if grep -q '^Session=niri' "$CONF" 2>/dev/null; then echo niri
+  elif [[ $(modo) == ii ]]; then echo ii
+  else echo hyprland; fi
 }
 
+# illogical-impulse no se lleva bien con UWSM (lo dice su instalador), asi que
+# usa la sesion "Hyprland" normal; Omarchy usa la suya (omarchy.desktop, con UWSM).
 cambiar() {
   local nombre=$1 archivo=$2
-  if [[ $(actual) == "$nombre" ]]; then
+  if [[ $nombre == ii ]]; then
+    echo ii >"$MODE_FILE"
+  elif [[ $nombre == hyprland && $(modo) == ii ]]; then
+    echo omarchy >"$MODE_FILE"
+  fi
+  if [[ ! -f $CONF ]]; then
+    echo "Este equipo no entra solo: en la pantalla de inicio elige \"${archivo%.desktop}\""
+    echo "(el menu de sesion, abajo). Queda recordado para la proxima vez."
+    return
+  fi
+  if grep -q "^Session=$archivo" "$CONF"; then
     echo "Ya estaba elegido: $nombre"
   else
     sudo sed -i "s|^Session=.*|Session=$archivo|" "$CONF" || exit 1
@@ -28,16 +46,13 @@ cambiar() {
   if [[ $r =~ ^[sSyY]$ ]]; then systemctl reboot; else echo "El cambio se aplica al reiniciar el equipo."; fi
 }
 
-if [[ ! -f $CONF ]]; then
-  echo "Este equipo no entra solo: elige el escritorio en la pantalla de inicio"
-  echo "(el menu de sesion, abajo). Queda recordado para la proxima vez."
-  exit 0
-fi
-
 case "${1:-estado}" in
   niri)     cambiar niri niri.desktop ;;
   hyprland) cambiar hyprland omarchy.desktop ;;
+  ii)
+    [[ -f $HOME/.config/hypr/ii.lua ]] || { echo "illogical-impulse no esta instalado: ii-dots instalar"; exit 1; }
+    cambiar ii hyprland.desktop ;;
   alternar) [[ $(actual) == niri ]] && exec "$0" hyprland || exec "$0" niri ;;
   estado)   echo "Sesion elegida: $(actual)" ;;
-  *)        sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+  *)        sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
 esac

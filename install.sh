@@ -7,6 +7,7 @@
 #       ./install.sh --si         (sin preguntas: lo recomendado)
 #       ./install.sh --hyprland   (arrancar con Hyprland; solo Omarchy)
 #       ./install.sh --niri       (arrancar con Niri)
+#       ./install.sh --ii         (arrancar con illogical-impulse; solo Omarchy)
 #
 # Es seguro ejecutarlo mas de una vez. Antes de sobrescribir guarda una copia
 # de tus archivos en ~/.config-respaldo-<fecha>.
@@ -28,8 +29,9 @@ for arg in "$@"; do
   case "$arg" in
     --hyprland) SESION=hyprland ;;
     --niri)     SESION=niri ;;
+    --ii)       SESION=ii ;;
     --si)       PREGUNTAR=false ;;
-    -h|--help)  sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help)  sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *)          error "Opcion desconocida: $arg (mira: ./install.sh --help)" ;;
   esac
 done
@@ -47,7 +49,7 @@ ES_VMWARE=false
 if $ES_OMARCHY; then BASE="Omarchy"; else BASE="Arch Linux (sin Omarchy)"; fi
 echo "Sistema: $BASE"
 echo "Maquina virtual VMware: $ES_VMWARE"
-if [[ $SESION == hyprland ]] && ! $ES_OMARCHY; then
+if [[ $SESION == hyprland || $SESION == ii ]] && ! $ES_OMARCHY; then
   error "Hyprland con esta configuracion necesita Omarchy. En Arch limpio usa Niri."
 fi
 
@@ -78,6 +80,7 @@ agregar() { IDS+=("$1"); NOMBRE[$1]=$2; DESC[$1]=$3; MARCA[$1]=$4; }
 
 $ES_OMARCHY || agregar base "Base del sistema" "Audio, red, Bluetooth, fuentes, terminal, archivos y pantalla de inicio." si
 $ES_OMARCHY && agregar hyprland "Hyprland" "Hyprland con DMS y el selector 'escritorio' (DMS u Omarchy)." si
+$ES_OMARCHY && agregar ii "illogical-impulse (end4-pC)" "Hyprland con el shell Material 3 de end-4 y pctrade: widgets, letras, IA, fondos en linea. Se activa con: escritorio ii" no
 agregar niri "Niri" "Niri con DMS: ventanas en columnas que se desplazan de lado." si
 agregar futurista "Modo futurista" "Solo en Niri: animaciones holograma, borde neon y cristal; los colores siguen al fondo." si
 agregar terminales "Terminales" "Ajustes de Ghostty, Kitty, Alacritty y Foot." si
@@ -137,7 +140,7 @@ menu() {
       [1-9]) if ((TECLA <= total)); then actual=$((TECLA - 1)); cambiar "${IDS[actual]}"; fi ;;
       a | A) for id in "${IDS[@]}"; do MARCA[$id]=si; done ;;
       n | N) for id in "${IDS[@]}"; do MARCA[$id]=no; done ;;
-      '') if quiere niri || quiere hyprland; then break; fi
+      '') if quiere niri || quiere hyprland || quiere ii; then break; fi
           nota="Elige al menos un escritorio (Hyprland o Niri)." ;;
       q | Q) limpiar; echo "Cancelado. No se cambio nada."; exit 0 ;;
     esac
@@ -175,14 +178,23 @@ if $PREGUNTAR; then menu; fi
 
 # Si se pidio una sesion por opcion, ese escritorio tiene que instalarse.
 [[ -n $SESION ]] && MARCA[$SESION]=si
+# illogical-impulse se carga desde el hyprland.lua de este repo.
+quiere ii && MARCA[hyprland]=si
 
 # Con que escritorio arranca el equipo.
 if [[ -z $SESION ]]; then
-  if quiere hyprland && quiere niri; then
-    SESION=hyprland
+  ESCRITORIOS=()
+  quiere hyprland && ESCRITORIOS+=(hyprland)
+  quiere ii && ESCRITORIOS+=(ii)
+  quiere niri && ESCRITORIOS+=(niri)
+  if ((${#ESCRITORIOS[@]} > 1)); then
+    SESION=${ESCRITORIOS[0]}
     if $PREGUNTAR; then
-      elegir_uno "Con que escritorio quieres arrancar el equipo?" "Hyprland" "Niri"
-      if ((ELEGIDO == 1)); then SESION=niri; fi
+      declare -A ETIQUETA=([hyprland]="Hyprland (Omarchy / DMS)" [ii]="Hyprland con illogical-impulse (end4-pC)" [niri]="Niri")
+      ETIQUETAS=()
+      for e in "${ESCRITORIOS[@]}"; do ETIQUETAS+=("${ETIQUETA[$e]}"); done
+      elegir_uno "Con que escritorio quieres arrancar el equipo?" "${ETIQUETAS[@]}"
+      SESION=${ESCRITORIOS[ELEGIDO]}
     fi
   elif quiere hyprland; then SESION=hyprland
   else SESION=niri
@@ -306,6 +318,7 @@ copiar "$H" .config/DankMaterialShell .local/bin/sesion
 quiere hyprland && copiar "$H" .config/hypr .config/escritorio-modo .config/omarchy \
   .local/bin/escritorio .local/bin/escritorio-accion
 quiere niri && copiar "$H" .config/niri .config/matugen .local/bin/futurista
+quiere ii && copiar "$H" .local/bin/ii-dots
 quiere terminales && copiar "$H" .config/alacritty .config/foot .config/ghostty .config/kitty
 $ES_OMARCHY && copiar "$H" .config/mimeapps.list
 quiere herramientas && copiar "$H" .config/mise .claude
@@ -351,8 +364,14 @@ if ! $ES_OMARCHY; then
   fi
 fi
 
-chmod +x "$HOME"/.local/bin/sesion "$HOME"/.local/bin/futurista "$HOME"/.local/bin/kali "$HOME"/.local/bin/escritorio* "$HOME"/.local/bin/vmware-display-sync 2>/dev/null || true
+chmod +x "$HOME"/.local/bin/sesion "$HOME"/.local/bin/ii-dots "$HOME"/.local/bin/futurista "$HOME"/.local/bin/kali "$HOME"/.local/bin/escritorio* "$HOME"/.local/bin/vmware-display-sync 2>/dev/null || true
 if [[ -d $RESPALDO ]]; then echo "Copia de tus archivos anteriores: $RESPALDO"; fi
+
+# ---------------------------------------------------------------- illogical-impulse
+if quiere ii; then
+  verde "Instalando illogical-impulse con el shell end4-pC"
+  "$HOME/.local/bin/ii-dots" instalar || aviso "illogical-impulse no quedo completo; reintenta con: ii-dots instalar"
+fi
 
 # ---------------------------------------------------------------- fondos
 if quiere fondos; then
@@ -453,7 +472,13 @@ fi
 # ---------------------------------------------------------------- sesion de inicio
 verde "Eligiendo el escritorio de inicio: $SESION"
 AUTOLOGIN=/etc/sddm.conf.d/autologin.conf
-if [[ $SESION == niri ]]; then ARCHIVO=niri.desktop; else ARCHIVO=omarchy.desktop; fi
+case $SESION in
+  niri) ARCHIVO=niri.desktop ;;
+  # illogical-impulse no usa UWSM: sesion "Hyprland" normal.
+  ii)   ARCHIVO=hyprland.desktop; echo ii >"$HOME/.config/escritorio-modo" ;;
+  *)    ARCHIVO=omarchy.desktop
+        if [[ $(cat "$HOME/.config/escritorio-modo" 2>/dev/null) == ii ]]; then echo omarchy >"$HOME/.config/escritorio-modo"; fi ;;
+esac
 if sudo test -f "$AUTOLOGIN"; then
   sudo sed -i "s|^Session=.*|Session=$ARCHIVO|" "$AUTOLOGIN"
 else
@@ -489,6 +514,11 @@ if quiere hyprland; then
 fi
 if quiere hyprland && quiere niri; then
   echo "  - Cambiar entre Hyprland y Niri (en una terminal):  sesion alternar"
+fi
+if quiere ii; then
+  echo "  - illogical-impulse:  escritorio ii   (volver: escritorio omarchy)"
+  echo "    Dentro: Super + F1 atajos, Super + Escape ajustes, Ctrl + Super + T fondo."
+  echo "    Actualizar illogical-impulse y end4-pC:  ii-dots actualizar"
 fi
 if quiere niri; then
   echo "  - En Niri: Super + K muestra todos los atajos."

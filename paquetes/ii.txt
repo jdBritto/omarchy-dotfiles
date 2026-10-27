@@ -1,0 +1,106 @@
+# illogical-impulse + end4-pC (Hyprland). Sacado de los PKGBUILD de
+# end-4/dots-hyprland (sdata/dist-arch). No se instala su quickshell-git:
+# piden la version 0.3.2 y el quickshell de Omarchy ya es esa (o mas nueva),
+# y DMS y el shell de Omarchy lo necesitan.
+# Hyprland
+hyprland
+hyprsunset
+wl-clipboard
+hypridle
+hyprlock
+hyprpicker
+# Audio
+cava
+pavucontrol-qt
+wireplumber
+pipewire-pulse
+libdbusmenu-gtk3
+playerctl
+easyeffects
+# Brillo
+geoclue
+brightnessctl
+ddcutil
+# Basicos
+bc
+cliphist
+cmake
+curl
+wget
+ripgrep
+jq
+xdg-user-dirs
+rsync
+go-yq
+git
+# Fuentes y temas
+adw-gtk-theme
+breeze
+breeze-plus
+darkly-bin
+eza
+fontconfig
+kitty
+matugen
+otf-space-grotesk
+ttf-jetbrains-mono-nerd
+ttf-material-symbols-variable-git
+ttf-readex-pro
+ttf-rubik-vf
+ttf-twemoji
+bibata-cursor-theme-bin
+kvantum
+xsettingsd
+# KDE (ajustes de wifi/bluetooth, archivos)
+bluedevil
+gnome-keyring
+networkmanager
+plasma-nm
+polkit-kde-agent
+dolphin
+systemsettings
+# Python (entorno de ii)
+clang
+uv
+gtk4
+libadwaita
+libsoup3
+libportal-gtk4
+gobject-introspection
+# Capturas y grabacion
+hyprshot
+slurp
+swappy
+tesseract
+tesseract-data-eng
+wf-recorder
+# Herramientas
+upower
+wtype
+ydotool
+# Widgets
+fuzzel
+glib2
+imagemagick
+songrec
+translate-shell
+wlogout
+libqalculate
+# Fondos de video (end4-pC)
+mpvpaper
+# Modulos Qt que usa el shell
+qt6-5compat
+qt6-avif-image-plugin
+qt6-imageformats
+qt6-multimedia
+qt6-positioning
+qt6-quicktimeline
+qt6-sensors
+qt6-svg
+qt6-tools
+qt6-translations
+qt6-virtualkeyboard
+qt6-wayland
+kirigami
+kdialog
+syntax-highlighting

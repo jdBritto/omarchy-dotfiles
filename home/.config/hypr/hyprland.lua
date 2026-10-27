@@ -1,5 +1,26 @@
 -- Learn how to configure Hyprland: https://wiki.hypr.land/Configuring/Start/
 
+-- illogical-impulse (end4-pC): con `escritorio ii` (o `sesion ii`) se carga su
+-- configuracion completa en lugar de la de Omarchy. Sus archivos viven en
+-- hypr/ii.lua, hypr/hyprland/ (de illogical-impulse) y hypr/custom/ (los tuyos).
+do
+	local f = io.open(os.getenv("HOME") .. "/.config/escritorio-modo", "r")
+	local modo_ii = f and f:read("*l") == "ii"
+	if f then f:close() end
+	if modo_ii then
+		local hypr = os.getenv("HOME") .. "/.config/hypr"
+		package.path = hypr .. "/?.lua;" .. hypr .. "/?/init.lua;" .. package.path
+		-- Al recargar (hyprctl reload) volver a leer los modulos.
+		for m in pairs(package.loaded) do
+			if m == "ii" or m == "monitors" or m == "workspaces" or m:match("^hyprland[./]") or m:match("^custom[./]") then
+				package.loaded[m] = nil
+			end
+		end
+		require("ii")
+		return
+	end
+end
+
 -- Omarchy's bootstrap keeps path setup out of this user config.
 dofile((os.getenv("OMARCHY_PATH") or "/usr/share/omarchy") .. "/default/hypr/bootstrap.lua")
 
