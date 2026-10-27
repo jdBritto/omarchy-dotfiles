@@ -1,0 +1,105 @@
+# Prompt estilo hacker para Zsh (bash sigue usando ~/.config/starship.toml)
+#
+# ┌──(usuario㉿equipo)-[~/carpeta] rama ✚  󰖂 10.10.14.5  took 3s
+# └─❯
+
+add_newline = true
+command_timeout = 300
+
+format = """
+[┌──](bold #00ff9c)\
+$username$hostname\
+[\\)-\\[](bold #00ff9c)$directory[\\]](bold #00ff9c)\
+$git_branch$git_status\
+${custom.vpn}\
+$python$docker_context\
+$cmd_duration\
+$status
+[└─](bold #00ff9c)$character"""
+
+# A la derecha: IP local y hora
+right_format = "${custom.lanip}$time"
+
+[username]
+show_always = true
+format = "[\\(](bold #00ff9c)[$user]($style)"
+style_user = "bold #00e5ff"
+style_root = "bold #ff3b6b"
+
+[hostname]
+ssh_only = false
+format = "[㉿](bold #00ff9c)[$hostname]($style)[$ssh_symbol](bold #ffd23f)"
+ssh_symbol = " ssh"
+style = "bold #00e5ff"
+
+[directory]
+format = "[$path]($style)[$read_only]($read_only_style)"
+style = "bold #cfe8d8"
+read_only = " 󰌾"
+truncation_length = 4
+truncation_symbol = "…/"
+
+[git_branch]
+format = " [$symbol$branch]($style)"
+symbol = " "
+style = "bold #c77dff"
+
+[git_status]
+format = "[ $all_status$ahead_behind]($style)"
+style = "#ffd23f"
+conflicted = "≠"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕"
+untracked = "?"
+modified = "✚"
+staged = "●"
+deleted = "✖"
+stashed = ""
+
+# IP de la VPN activa (HTB/THM tun0, WireGuard, FortiClient...)
+[custom.vpn]
+command = "vpn-ip | cut -d' ' -f2"
+when = "vpn-ip"
+shell = ["bash", "--noprofile", "--norc"]
+format = "  [󰖂 $output]($style)"
+style = "bold #00ff9c"
+
+[python]
+format = " [${symbol}${virtualenv}]($style)"
+symbol = " "
+style = "#ffd23f"
+detect_extensions = []
+detect_files = []
+
+[docker_context]
+format = " [$symbol$context]($style)"
+style = "#3fa9ff"
+
+[cmd_duration]
+min_time = 2000
+format = "  [took $duration]($style)"
+style = "#6f8f84"
+
+[status]
+disabled = false
+format = " [✘ $status]($style)"
+style = "bold #ff3b6b"
+
+[character]
+success_symbol = "[❯](bold #00ff9c)"
+error_symbol = "[❯](bold #ff3b6b)"
+
+# IP de la red local (sale a la derecha del prompt)
+[custom.lanip]
+command = "ip -4 -o route get 1.1.1.1 2>/dev/null | grep -oP 'src \\K\\S+'"
+when = true
+shell = ["bash", "--noprofile", "--norc"]
+format = "[󰩟 $output]($style) "
+style = "#6f8f84"
+
+[time]
+disabled = false
+format = "[ $time]($style)"
+time_format = "%H:%M"
+style = "#00e5ff"

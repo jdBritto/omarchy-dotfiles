@@ -1,0 +1,16 @@
+# Zsh hacker: Zsh + Oh My Zsh + Powerlevel10k (Oh My Zsh, Powerlevel10k, fzf-tab
+# y you-should-use se descargan con git desde install.sh)
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
+zsh-history-substring-search
+git
+kitty
+starship
+fzf
+fd
+bat
+eza
+zoxide
+fastfetch
+ttf-jetbrains-mono-nerd

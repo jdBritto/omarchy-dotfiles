@@ -84,6 +84,7 @@ $ES_OMARCHY && agregar ii "illogical-impulse (end4-pC)" "Hyprland con el shell M
 agregar niri "Niri" "Niri con DMS: ventanas en columnas que se desplazan de lado." si
 agregar futurista "Modo futurista" "Solo en Niri: animaciones holograma, borde neon y cristal; los colores siguen al fondo." si
 agregar terminales "Terminales" "Ajustes de Ghostty, Kitty, Alacritty y Foot." si
+agregar zsh "Zsh hacker" "Kitty abre Zsh con Oh My Zsh, Powerlevel10k (verde/cian), fastfetch, eza y alias de hacking." si
 agregar apps "Apps" "Firefox, nano y cava." si
 agregar herramientas "Herramientas de desarrollo" "claude, codex, gh, node y opencode (con mise)." si
 agregar dictado "Dictado por voz" "voxtype." si
@@ -320,6 +321,12 @@ quiere hyprland && copiar "$H" .config/hypr .config/escritorio-modo .config/omar
 quiere niri && copiar "$H" .config/niri .config/matugen .local/bin/futurista
 quiere ii && copiar "$H" .local/bin/ii-dots
 quiere terminales && copiar "$H" .config/alacritty .config/foot .config/ghostty .config/kitty
+quiere zsh && copiar "$H" .zshrc .p10k.zsh .config/zsh .config/starship-hacker.toml \
+  .config/fastfetch .config/eza .local/bin/vpn-ip
+# Kitty abre Zsh solo si se instala "Zsh hacker".
+if quiere terminales && ! quiere zsh; then
+  sed -i '/^shell \/usr\/bin\/zsh/d' "$HOME/.config/kitty/kitty.conf"
+fi
 $ES_OMARCHY && copiar "$H" .config/mimeapps.list
 quiere herramientas && copiar "$H" .config/mise .claude
 quiere seguridad && copiar "$H" .local/bin/kali
@@ -352,7 +359,7 @@ fi
 if ! $ES_OMARCHY; then
   # Los temas de las terminales vienen de Omarchy: quitar esas lineas.
   for t in alacritty/alacritty.toml foot/foot.ini ghostty/config kitty/kitty.conf; do
-    if [[ -f $HOME/.config/$t ]]; then sed -i '/state\/omarchy/d' "$HOME/.config/$t"; fi
+    if [[ -f $HOME/.config/$t ]]; then sed -i -e '/state\/omarchy/d' -e '\|^include /etc/xdg/kitty/|d' "$HOME/.config/$t"; fi
   done
   # Terminal por defecto (Super + Enter) y navegador por defecto.
   [[ -f $HOME/.config/xdg-terminals.list ]] || echo com.mitchellh.ghostty.desktop >"$HOME/.config/xdg-terminals.list"
@@ -364,8 +371,25 @@ if ! $ES_OMARCHY; then
   fi
 fi
 
-chmod +x "$HOME"/.local/bin/sesion "$HOME"/.local/bin/ii-dots "$HOME"/.local/bin/futurista "$HOME"/.local/bin/kali "$HOME"/.local/bin/escritorio* "$HOME"/.local/bin/vmware-display-sync 2>/dev/null || true
+chmod +x "$HOME"/.local/bin/sesion "$HOME"/.local/bin/ii-dots "$HOME"/.local/bin/futurista "$HOME"/.local/bin/kali "$HOME"/.local/bin/escritorio* "$HOME"/.local/bin/vmware-display-sync "$HOME"/.local/bin/vpn-ip 2>/dev/null || true
 if [[ -d $RESPALDO ]]; then echo "Copia de tus archivos anteriores: $RESPALDO"; fi
+
+# ---------------------------------------------------------------- zsh hacker
+if quiere zsh; then
+  verde "Instalando Oh My Zsh, Powerlevel10k y plugins de Zsh"
+  clonar() { # clonar URL CARPETA: descarga el repositorio, o lo actualiza si ya esta
+    if [[ -d $2/.git ]]; then
+      git -C "$2" pull --ff-only -q || aviso "No se pudo actualizar $2"
+    else
+      git clone --depth=1 -q "$1" "$2" || aviso "No se pudo descargar $1"
+    fi
+  }
+  OMZ="$HOME/.oh-my-zsh"
+  clonar https://github.com/ohmyzsh/ohmyzsh.git "$OMZ"
+  clonar https://github.com/romkatv/powerlevel10k.git "$OMZ/custom/themes/powerlevel10k"
+  clonar https://github.com/MichaelAquilina/zsh-you-should-use.git "$OMZ/custom/plugins/you-should-use"
+  clonar https://github.com/Aloxaf/fzf-tab.git "$HOME/.local/share/zsh/plugins/fzf-tab"
+fi
 
 # ---------------------------------------------------------------- illogical-impulse
 if quiere ii; then

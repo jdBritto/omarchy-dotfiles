@@ -145,6 +145,31 @@ Antes de dejar Windows, revisa tus juegos en [ProtonDB](https://www.protondb.com
 y [Are We Anti-Cheat Yet](https://areweanticheatyet.com): los que usan ciertos
 anticheat (Valorant, League of Legends, Fortnite…) no funcionan en Linux.
 
+## Zsh hacker
+
+Opción **Zsh hacker** del instalador. Kitty abre **Zsh** (bash sigue siendo el shell
+del sistema) con:
+
+- **Oh My Zsh** con plugins: git, archlinux, docker, extract, copypath, copyfile,
+  copybuffer, nmap, python, web-search, encode64, urltools, jsontools, aliases y
+  you-should-use.
+- **Powerlevel10k** en bloques verde/cian: usuario, carpeta, git, IP de la VPN,
+  IP local y hora. Los comandos anteriores se reducen a `❯ comando`.
+- **Bienvenida** con fastfetch al abrir la terminal y una línea con LAN, VPN y la ayuda.
+- Sugerencias en gris, colores de sintaxis, menú con Tab (fzf-tab), `Esc Esc` para
+  `sudo`, `ls` con iconos (eza) y alias de hacking (`serve`, `box`, `nmapq`...).
+
+```bash
+atajos                    # ayuda con todos los atajos y alias
+estilo-prompt starship    # volver al prompt estilo Kali (Starship)
+estilo-prompt p10k        # volver a Powerlevel10k
+p10k reload               # aplicar cambios de ~/.config/zsh/p10k-hacker.zsh
+```
+
+Los colores del prompt están en `~/.config/zsh/p10k-hacker.zsh`, que se aplica
+encima de la plantilla `~/.p10k.zsh`. Oh My Zsh, Powerlevel10k, fzf-tab y
+you-should-use se descargan con git durante la instalación.
+
 ## Seguridad
 
 Opción **Seguridad** del instalador (desmarcada por defecto; descarga 1,2 GB y ocupa unos 4 GB):
